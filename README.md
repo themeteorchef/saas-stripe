@@ -9,3 +9,5 @@
 [Demo the Recipe](http://themeteorchef-<demo-number>-demo.meteor.com)  
 
 [Download the Source](https://github.com/themeteorchef/<repository-slug>/archive/master.zip)
+
+This code for this recipe is licensed under the [MIT License](http://opensource.org/licenses/MIT).
