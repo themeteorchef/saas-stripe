@@ -6,7 +6,7 @@
 
 [Read on The Meteor Chef](http://themeteorchef.com/recipes/<recipe-slug>)  
 
-[Demo the Recipe](http://themeteorchef-<demo-number>-demo.meteor.com)  
+[Demo the Recipe](http://tmc-<sequence-number>-demo.meteor.com)  
 
 [Download the Source](https://github.com/themeteorchef/<repository-slug>/archive/master.zip)
 
