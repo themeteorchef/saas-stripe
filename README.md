@@ -1,13 +1,15 @@
 #### The Meteor Chef
-#### \#<sequence number> - <Recipe Name>
+#### \#005 - Building a SaaS with Meteor: Stripe
 
-<What we'll learn description>
+In this recipe we'll help a new SaaS startup Todoodle (a todo list creator)
+integrate Stripe into their app. We'll learn about single charges,
+subscriptions, coupon codes, and how to handle events via webhooks. 
 
 
-[Read on The Meteor Chef](http://themeteorchef.com/recipes/<recipe-slug>)  
+[Read on The Meteor Chef](http://themeteorchef.com/recipes/saas-stripe)  
 
-[Demo the Recipe](http://tmc-<sequence-number>-demo.meteor.com)  
+[Demo the Recipe](http://tmc-005-demo.meteor.com)  
 
-[Download the Source](https://github.com/themeteorchef/<repository-slug>/archive/master.zip)
+[Download the Source](https://github.com/themeteorchef/saas-stripe/archive/master.zip)
 
 The code for this recipe is licensed under the [MIT License](http://opensource.org/licenses/MIT).
