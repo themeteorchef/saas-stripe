@@ -3,7 +3,7 @@
 
 In this recipe we'll help a new SaaS startup Todoodle (a todo list creator)
 integrate Stripe into their app. We'll learn about single charges,
-subscriptions, coupon codes, and how to handle events via webhooks. 
+subscriptions, coupon codes, invoices, and how to handle events via webhooks.
 
 
 [Read on The Meteor Chef](http://themeteorchef.com/recipes/saas-stripe)  
