@@ -1,0 +1,39 @@
+<template name="billingPaymentHistory">
+  <div class="panel panel-default billing-module">
+    <div class="panel-heading">
+      <h3 class="panel-title">Payment History</h3>
+    </div>
+    <div class="panel-body">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Plan</th>
+            <th>Card Used</th>
+            <th>Amount</th>
+            <th>Invoice</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>12345</td>
+            <td>01-08-2015</td>
+            <td>Small</td>
+            <td>5512</td>
+            <td>$15.00</td>
+            <td><a href="#" class="text-success">View Invoice</a></td>
+          </tr>
+          <tr>
+            <td>12345</td>
+            <td>01-08-2015</td>
+            <td>Small</td>
+            <td>5512</td>
+            <td>$15.00</td>
+            <td><span class="text-danger">Payment Failed</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</template>
