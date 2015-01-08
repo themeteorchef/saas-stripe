@@ -1,0 +1,47 @@
+<template name="billingCard">
+  <div class="panel panel-default billing-module">
+    <div class="panel-heading">
+      <h3 class="panel-title"><a href="{{pathFor 'billing'}}" class="text-muted">Billing</a> / Card</h3>
+    </div>
+    <div class="panel-body">
+      <div class="card">
+        <div class="row">
+          <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
+            <div class="row">
+              <div class="col-xs-12">
+                <!-- Do an {{#if currentUser.profile.billing.card}} -->
+                <div class="form-group">
+                  <label>Card Number</label>
+                  <p><strong>Visa</strong> 5512 &mdash; <a href="#">Enter a new card</a></p>
+                  <input type="text" class="form-control card-number" placeholder="Card Number">
+                </div>
+              </div>
+            </div> <!-- end .row -->
+            <div class="row">
+              <div class="col-xs-4">
+                <label>Exp. Mo.</label>
+                <input type="text" class="form-control exp-month" placeholder="Exp. Mo.">
+              </div>
+              <div class="col-xs-4">
+                <label>Exp. Yr.</label>
+                <input type="text" class="form-control exp-year" placeholder="Exp. Yr.">
+              </div>
+              <div class="col-xs-4">
+                <label>CVV</label>
+                <input type="text" class="form-control cvv" placeholder="CVV">
+              </div>
+            </div> <!-- end .row -->
+          </div> <!-- end. col-xs-12 -->
+        </div> <!-- end. row -->
+      </div>
+    </div>
+    <div class="panel-footer">
+      <div class="row">
+        <div class="col-xs-12">
+          <button type="submit" class="btn btn-success">Update Card</button>
+          <a href="{{pathFor 'billing'}}" class="btn btn-default">Cancel</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

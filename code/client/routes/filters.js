@@ -29,7 +29,7 @@ checkUserLoggedIn = function(){
 
 userAuthenticated = function(){
   if( !Meteor.loggingIn() && Meteor.user() ){
-    Router.go('/');
+    Router.go('/lists');
   } else {
     this.next();
   }
@@ -41,6 +41,7 @@ userAuthenticated = function(){
 
 Router.onBeforeAction(checkUserLoggedIn, {
   except: [
+    'index',
     'signup',
     'login',
     'recover-password',
@@ -50,6 +51,7 @@ Router.onBeforeAction(checkUserLoggedIn, {
 
 Router.onBeforeAction(userAuthenticated, {
   only: [
+    'index',
     'signup',
     'login',
     'recover-password',

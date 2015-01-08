@@ -1,0 +1,35 @@
+<template name="billingPlan">
+  <div class="panel panel-default billing-module">
+    <div class="panel-heading">
+      <h3 class="panel-title"><a href="{{pathFor 'billing'}}" class="text-muted">Billing</a> / Plan</h3>
+    </div>
+    <div class="panel-body">
+      <ul class="list-group">
+        <li class="list-group-item bm-block clearfix">
+          <div class="bm-block-content plan">
+            <span class="plan-name-quota"><strong>Tiny</strong> &mdash; 1 list</span>
+          </div>
+          <a href="{{pathFor 'billingPlan'}}" disabled="disabled" class="btn btn-small btn-default pull-right">Downgrade</a>
+        </li>
+        <li class="list-group-item list-group-item-success bm-block clearfix">
+          <div class="bm-block-content plan">
+            <span class="plan-name-quota"><strong>Small</strong> &mdash; 5 lists</span>
+          </div>
+          <a href="#" disabled="disabled" class="btn btn-small btn-success pull-right">Current Plan</a>
+        </li>
+        <li class="list-group-item bm-block clearfix">
+          <div class="bm-block-content plan">
+            <span class="plan-name-quota"><strong>Medium</strong> &mdash; 10 lists</span>
+          </div>
+          <a href="{{pathFor 'billingPlan'}}" class="btn btn-small btn-default pull-right">Upgrade</a>
+        </li>
+        <li class="list-group-item bm-block clearfix">
+          <div class="bm-block-content plan">
+            <span class="plan-name-quota"><strong>Large</strong> &mdash; 20 lists</span>
+          </div>
+          <a href="{{pathFor 'billingPlan'}}" class="btn btn-small btn-default pull-right">Upgrade</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>

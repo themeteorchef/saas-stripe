@@ -1,0 +1,45 @@
+.billing-module .panel-body .list-group,
+.billing-module .panel-body table {
+  margin-bottom: 0px;
+}
+
+.bm-block-label {
+  float: left;
+  display: block;
+  width: 15%;
+  color: #888;
+}
+
+.bm-block-content {
+  float: left;
+  display: block;
+  width: 50%;
+
+  span {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  span:last-child {
+    margin-bottom: 0px;
+  }
+}
+
+.usage-bar {
+  position: relative;
+  height: 5px;
+  background: #eee;
+
+  .used {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 25%;
+    height: 5px;
+    background: green;
+  }
+}
+
+.bm-block .plan {
+  margin-top: 7px;
+}
