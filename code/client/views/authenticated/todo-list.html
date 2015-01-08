@@ -1,3 +1,21 @@
 <template name="todoList">
-  <h3>Todo List</h3>
+  <div class="page-header clearfix">
+    <div class="row">
+      <div class="col-xs-12 col-sm-8">
+        <div class="form-group">
+          <input type="text" class="form-control" name="listName" value="" placeholder="List Name">
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-4">
+        <a href="#" class="btn btn-danger btn-block pull-right">Delete List</a>
+      </div>
+    </div>
+  </div>
+  <div class="list-group">
+    <a href="#" class="list-group-item">This is a list</a>
+    <a href="#" class="list-group-item">This is a list</a>
+    <a href="#" class="list-group-item">This is a list</a>
+    <a href="#" class="list-group-item">This is a list</a>
+    <a href="#" class="list-group-item">This is a list</a>
+  </div>
 </template>
