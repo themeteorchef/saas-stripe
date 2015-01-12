@@ -20,7 +20,7 @@ TodoLists.allow({
 * Deny
 */
 
-Example.deny({
+TodoLists.deny({
   insert: function(){
     return true;
   },
