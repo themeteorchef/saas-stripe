@@ -1,14 +1,18 @@
 <template name="todoLists">
   <div style="margin-top: 0px;" class="page-header clearfix">
     <h3 class="pull-left">Todo Lists</h3>
-    <a href="#" style="margin-top: 15px;" class="btn btn-success pull-right">New Todo List</a>
+    {{#if listsAvailable}}
+      <a href="#" style="margin-top: 15px;" class="btn btn-success pull-right">New Todo List</a>
+    {{/if}}
   </div>
-  <p class="alert alert-warning">Heads up! You've hit your list limit for your current plan (<strong>Small - 5 lists</strong>). <a href="{{pathFor 'billingPlan'}}">Upgrade Now</a></p>
+  {{#unless listsAvailable}}
+    <p class="alert alert-warning">Heads up! You've hit your list limit for your current plan (<strong>Small - 5 lists</strong>). <a href="{{pathFor 'billingPlan'}}">Upgrade Now</a></p>
+  {{/unless}}
   <div class="list-group">
-    <a href="#" class="list-group-item">This is a list</a>
-    <a href="#" class="list-group-item">This is a list</a>
-    <a href="#" class="list-group-item">This is a list</a>
-    <a href="#" class="list-group-item">This is a list</a>
-    <a href="#" class="list-group-item">This is a list</a>
+    {{#each lists}}
+      <a href="{{pathFor 'todoList'}}" class="list-group-item">{{name}}</a>
+    {{else}}
+     <p class="alert alert-info">You haven't created any lists yet!</p>
+    {{/each}}
   </div>
 </template>

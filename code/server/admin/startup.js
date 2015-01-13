@@ -33,7 +33,7 @@ var users = [
     subscription: {
       plan: {
         type: "small",
-        lists: "5"
+        lists: 5
       },
       payment: {
         card: {
@@ -49,12 +49,14 @@ var users = [
 // Loop through array of user accounts.
 for(i=0; i < users.length; i++){
   // Check if the user already exists in the DB.
-  var userEmail = users[i].email,
+  var user      = users[i],
+      userEmail = user.email,
       checkUser = Meteor.users.findOne({"emails.address": userEmail});
 
   // If an existing user is not found, create the account.
   if( !checkUser ){
-    Accounts.createUser({
+    // Create the new user.
+    var userId = Accounts.createUser({
       email: userEmail,
       password: users[i].password,
       profile: {
@@ -62,5 +64,19 @@ for(i=0; i < users.length; i++){
         subscription: users[i].subscription
       }
     });
+
+    // Once the user is available, give them a set of todo lists equal to their
+    // plan limit. Wrap this in a setTimeout to give our collection a chance to
+    // be initialized on the server.
+
+    Meteor.setTimeout(function(){
+      for(i=0; i < user.subscription.plan.lists; i++){
+        Meteor.call('insertTodoList', userId, function(error){
+          if (error) {
+            console.log(error);
+          }
+        });
+      }
+    }, 3000);
   }
 }

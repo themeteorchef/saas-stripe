@@ -5,24 +5,48 @@
 
 Meteor.methods({
 
-  insertTodoList: function(){
-    // Because our demo is focused on adding lists to demonstrate quotas,
-    // we define a "dummy" list that is automatically inserted when this
-    // method (insertTodoList) is called.
+  insertTodoList: function(userId){
+    // Create a "dummy" list that we can insert.
     var list = {
-      name: "My Awesome Todoodle List"
+      name: "Example Todoodle List",
+      owner: null
     }
 
-    // Before we perform the insert, we need to check the user's "quota" value
-    // in their profile. If this value is higher than their plan allows, we need
-    // to deny the insert and return an error to the client.
-    // TODO: Add quota validation.
+    // Because our method needs to operate with and without a userId, make sure
+    // that if one is passed, we check it against our expected pattern. If not,
+    // we just get the current logged in user.
+    if (userId) {
+      check(userId, String);
+      list.owner = userId;
+    } else {
+      var user = Meteor.userId();
+      list.owner = user;
+    }
 
     // Once we've confirmed the insert is valid, push the list into the
     // collection. Note: we're setting this equal to a variable and returning
     // it from our method so that we can return the generate ID back to the
     // client. We'll then use this ID to route our user. Neat!
-    var newList = TodoLists.insert(list);
+    var newList = TodoLists.insert(list, function(error){
+      if (error) {
+        console.log(error);
+      } else {
+        // Get the current userId and perform a lookup.
+        var getUser = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription.plan.lists": 1}});
+
+        // Take the returned number, increment it, and call the updateUserQuota
+        // method to update their account. The ++ is a JavaScript operator for
+        // adding 1 to the value it's prepended to :)
+        var newQuota = ++getUser.profile.subscription.plan.lists;
+        var update   = {auth: SERVER_AUTH_TOKEN, user: user, quota: newQuota};
+        // Call the method.
+        Meteor.call('updateUserQuota', update, function(error){
+          if(error){
+            console.log(error);
+          }
+        });
+      }
+    });
 
     return newList;
   }

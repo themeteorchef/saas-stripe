@@ -22,11 +22,11 @@ Meteor.methods({
 
         // Take the returned number, decrement it, and call the updateUserQuota
         // method to update their account. The -- is a JavaScript operator for
-        // removing 1 from the value it's appended to :)
-        var newQuota = getUser.profile.subscription.plan.lists--;
-
+        // removing 1 from the value it's prepended to :)
+        var newQuota = --getUser.profile.subscription.plan.lists;
+        var update   = {auth: SERVER_AUTH_TOKEN, user: user, quota: newQuota};
         // Call the method.
-        Meteor.call('updateUserQuota', {auth: SERVER_AUTH_TOKEN, user: user, quota: newQuota}, function(error){
+        Meteor.call('updateUserQuota', update, function(error){
           if(error){
             console.log(error);
           }
