@@ -5,25 +5,25 @@
     </div>
     <div class="panel-body">
       <ul class="list-group">
-        <li class="list-group-item bm-block clearfix">
+        <li class="list-group-item {{#if equals plan.subscription.type 'tiny'}}list-group-item-success{{/if}} bm-block clearfix">
           <div class="bm-block-content plan">
             <span class="plan-name-quota"><strong>Tiny</strong> &mdash; 1 list</span>
           </div>
           <a href="{{pathFor 'billingPlan'}}" disabled="disabled" class="btn btn-small btn-default pull-right">Downgrade</a>
         </li>
-        <li class="list-group-item list-group-item-success bm-block clearfix">
+        <li class="list-group-item {{#if equals plan.subscription.type 'small'}}list-group-item-success{{/if}} bm-block clearfix">
           <div class="bm-block-content plan">
             <span class="plan-name-quota"><strong>Small</strong> &mdash; 5 lists</span>
           </div>
           <a href="#" disabled="disabled" class="btn btn-small btn-success pull-right">Current Plan</a>
         </li>
-        <li class="list-group-item bm-block clearfix">
+        <li class="list-group-item {{#if equals plan.subscription.type 'medium'}}list-group-item-success{{/if}} bm-block clearfix">
           <div class="bm-block-content plan">
             <span class="plan-name-quota"><strong>Medium</strong> &mdash; 10 lists</span>
           </div>
           <a href="{{pathFor 'billingPlan'}}" class="btn btn-small btn-default pull-right">Upgrade</a>
         </li>
-        <li class="list-group-item bm-block clearfix">
+        <li class="list-group-item {{#if equals plan.subscription.type 'large'}}list-group-item-success{{/if}} bm-block clearfix">
           <div class="bm-block-content plan">
             <span class="plan-name-quota"><strong>Large</strong> &mdash; 20 lists</span>
           </div>
