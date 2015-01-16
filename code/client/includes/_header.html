@@ -26,6 +26,7 @@
 	      </ul>
 	      {{else}}
 	      <ul class="nav navbar-nav navbar-right">
+					<li class="{{currentRoute 'index'}}"><a href="{{pathFor 'index'}}">Home</a></li>
 	        <li class="{{currentRoute 'login'}}"><a href="{{pathFor 'login'}}">Login</a></li>
 	        <li class="{{currentRoute 'signup'}}"><a href="{{pathFor 'signup'}}">Sign Up</a></li>
 	      </ul>
