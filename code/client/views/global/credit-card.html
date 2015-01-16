@@ -1,0 +1,25 @@
+<template name="creditCard">
+  <div class="row">
+    <div class="col-xs-12">
+      <!-- Do an {{#if currentUser.profile.billing.card}} -->
+      <div class="form-group">
+        <label class="text-success"><i class="fa fa-lock"></i> Card Number (Totes Secure, Like a Bank)</label>
+        <input type="text" class="form-control card-number" placeholder="Card Number">
+      </div>
+    </div>
+  </div> <!-- end .row -->
+  <div class="row">
+    <div class="col-xs-4">
+      <label>Exp. Mo.</label>
+      <input type="text" class="form-control exp-month" placeholder="Exp. Mo.">
+    </div>
+    <div class="col-xs-4">
+      <label>Exp. Yr.</label>
+      <input type="text" class="form-control exp-year" placeholder="Exp. Yr.">
+    </div>
+    <div class="col-xs-4">
+      <label>CVV</label>
+      <input type="text" class="form-control cvv" placeholder="CVV">
+    </div>
+  </div> <!-- end .row -->
+</template>

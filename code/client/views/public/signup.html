@@ -1,8 +1,10 @@
 <template name="signup">
   <div class="row">
     <div class="col-xs-12 col-sm-6 col-md-4">
-      <h3 class="page-header">Sign Up</h3>
+      <h3 class="page-header">Start Slaying Tasks</h3>
+      <p>Signup for a <strong>FREE 1 day trial</strong> of Todoodle today and start dropkicking your todo list into the stratosphere. To get started, hit us up with an Email Address, Password, and your credit card details.</p>
       <form id="application-signup" class="signup">
+        <h4 class="page-header">Account details</h4>
         <div class="form-group">
           <label for="emailAddress">Email Address</label>
           <input type="email" name="emailAddress" class="form-control" placeholder="Email Address">
@@ -11,8 +13,13 @@
           <label for="password">Password</label>
           <input type="password" name="password" class="form-control" placeholder="Password">
         </div> <!-- end .form-group -->
+        <h4 class="page-header">Payment Information</h4>
+        <p class="alert alert-info"><strong>Jokes aside:</strong> to test out the credit card form, you can use the card number <strong>4242 4242 4242 4242 along with any future expiration month, year, and CVV</strong>. In one day, you'll receive an email from Todoodle confirming the end of your one day trial to showcase Stripe in action.</p>
         <div class="form-group">
-          <input type="submit" class="btn btn-success" value="Sign Up">
+          {{>creditCard}}
+        </div>
+        <div class="form-group">
+          <input type="submit" class="btn btn-success btn-block" style="margin-top: 40px; margin-bottom: 40px;" value="Put me on the rocketship, bro.">
         </div> <!-- end .form-group -->
       </form>
       <p>Already have an account? <a href="{{pathFor 'login'}}">Log In</a>.</p>
