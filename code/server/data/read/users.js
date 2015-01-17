@@ -12,12 +12,17 @@ Meteor.methods({
     // Query for our user and get their current quota.
     var getUser      = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription.plan": 1}}),
         subscription = getUser.profile.subscription.plan,
-        plan         = subscription.type,
-        quota        = subscription.lists,
-        limit        = Meteor.settings.public.plans[plan].limit;
+        userPlan     = subscription.type,
+        quota        = subscription.lists;
+
+    // Find the correct plan in our plans array (defined in /settings.json).
+    var plansArray = Meteor.settings.public.plans;
+    var getPlan    = _.find(plansArray, function(plan){ return plan.name == userPlan; });
+    var limit      = getPlan.limit;
 
     // Verify that our user has lists available. If so, return true, if they
     // do not, return false.
+
     if( quota < limit ){
       return true;
     } else {
@@ -31,8 +36,12 @@ Meteor.methods({
 
     // Query for our user and get their current plan information.
     var getUser      = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription.plan": 1}}),
-        subscription = getUser.profile.subscription.plan,
-        limit        = Meteor.settings.public.plans[subscription.type].limit;
+        subscription = getUser.profile.subscription.plan;
+
+    // Find the correct plan in our plans array (defined in /settings.json).
+    var plansArray = Meteor.settings.public.plans;
+    var getPlan    = _.find(plansArray, function(plan){ return plan.name == subscription.type; });
+    var limit      = getPlan.limit;
 
     // If we get a plan and limit back, return them to the client for use. Here,
     // we use a ternary to check whether the limit is greater than one so that

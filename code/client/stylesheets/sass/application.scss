@@ -1,6 +1,9 @@
 /* Globals */
 @import "globals/extends";
 
-/* Views */
-@import "views/authenticated/billing";
+/* Public */
+@import "views/public/select-plan";
 @import "views/public/login";
+
+/* Authenticated */
+@import "views/authenticated/billing";

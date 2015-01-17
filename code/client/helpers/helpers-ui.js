@@ -15,7 +15,16 @@ UI.registerHelper('currentRoute', function(route){
 });
 
 /*
-* Subscription
+* Limit String
+* Return the proper string based on the number of lists.
+*/
+
+UI.registerHelper('limitString', function(limit){
+  return limit > 1 ? limit + " lists" : limit + " list";
+});
+
+/*
+* Plan
 * Get the current subscription data for our user. We set this up as a UI helper
 * because we'll need to reference this information more than once.
 */
@@ -69,5 +78,7 @@ UI.registerHelper('percentage', function(v1,v2){
 */
 
 UI.registerHelper('capitalize', function(string){
-  return string.charAt(0).toUpperCase() + string.slice(1);
+  if (string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);  
+  }
 });

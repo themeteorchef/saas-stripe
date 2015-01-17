@@ -34,17 +34,19 @@ Meteor.methods({
         // Get the current userId and perform a lookup.
         var getUser = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription.plan.lists": 1}});
 
-        // Take the returned number, increment it, and call the updateUserQuota
-        // method to update their account. The ++ is a JavaScript operator for
-        // adding 1 to the value it's prepended to :)
-        var newQuota = ++getUser.profile.subscription.plan.lists;
-        var update   = {auth: SERVER_AUTH_TOKEN, user: user, quota: newQuota};
-        // Call the method.
-        Meteor.call('updateUserQuota', update, function(error){
-          if(error){
-            console.log(error);
-          }
-        });
+        if (getUser) {
+          // Take the returned number, increment it, and call the updateUserQuota
+          // method to update their account. The ++ is a JavaScript operator for
+          // adding 1 to the value it's prepended to :)
+          var newQuota = ++getUser.profile.subscription.plan.lists;
+          var update   = {auth: SERVER_AUTH_TOKEN, user: user, quota: newQuota};
+          // Call the method.
+          Meteor.call('updateUserQuota', update, function(error){
+            if(error){
+              console.log(error);
+            }
+          });
+        }
       }
     });
 
