@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "stripe": {
+      "version": "3.0.3",
+      "dependencies": {
+        "when": {
+          "version": "3.1.0"
+        },
+        "qs": {
+          "version": "2.3.3"
+        },
+        "lodash": {
+          "version": "2.4.1"
+        }
+      }
+    }
+  }
+}

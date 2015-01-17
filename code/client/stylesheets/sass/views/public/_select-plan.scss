@@ -1,0 +1,8 @@
+.select-plan input[type="radio"] {
+  display: none;
+  margin-right: 7px;
+}
+
+label + .select-plan {
+  margin-top: 5px;
+}
