@@ -18,16 +18,6 @@ var secret = Meteor.settings.private.stripe.testSecretKey;
 var Stripe = Meteor.npmRequire('stripe')(secret);
 var Future = Npm.require('fibers/future');
 
-/*
-Meteor.call('stripeCreateToken', {number: "4242424242424242", exp_month: "12", exp_year: "2019", cvc: "555"}, function(error, response){
-  if (error){
-    console.log(error);
-  } else {
-    console.log(response);
-  }
-});
-*/
-
 Meteor.methods({
 
   stripeCreateToken: function(card){
@@ -45,7 +35,7 @@ Meteor.methods({
     // library. This allows us to create a return object that "waits" for us to
     // return a value to it.
     var stripeToken = new Future();
-    
+
     // If all is well, call to the Stripe API to create our token!
     Stripe.tokens.create({
       card: card // Pass our card object to the "card" parameter.

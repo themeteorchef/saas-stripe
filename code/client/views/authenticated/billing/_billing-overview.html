@@ -8,7 +8,7 @@
         <li class="list-group-item bm-block clearfix">
           <span class="bm-block-label">Current Plan</span>
           <div class="bm-block-content">
-            <span class="plan-name-quota"><strong>{{capitalize plan.subscription.plan.type}}</strong> &mdash; {{plan.subscription.plan.lists}} of {{plan.limit}} used</span>
+            <span class="plan-name-quota"><strong>{{capitalize plan.subscription.plan.name}}</strong> &mdash; {{plan.subscription.plan.lists}} of {{plan.limit}} used</span>
             <div class="usage-bar">
               <div class="used" style="width:{{percentage plan.subscription.plan.lists plan.limit}};"></div>
             </div>

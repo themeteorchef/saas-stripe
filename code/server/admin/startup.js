@@ -32,7 +32,7 @@ var users = [
     password: "your15minutesisup",
     subscription: {
       plan: {
-        type: "small",
+        name: "small",
         lists: 5
       },
       payment: {
