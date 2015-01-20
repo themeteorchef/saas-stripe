@@ -1,3 +1,8 @@
+.billing-module.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .billing-module .panel-body .list-group,
 .billing-module .panel-body table {
   margin-bottom: 0px;
