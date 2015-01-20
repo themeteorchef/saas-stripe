@@ -35,13 +35,14 @@ Meteor.methods({
     check(user, String);
 
     // Query for our user and get their current plan information.
-    var getUser      = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription.plan": 1}}),
-        subscription = getUser.profile.subscription.plan;
+    var getUser      = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription": 1}}),
+        subscription = getUser.profile.subscription;
 
     // Find the correct plan in our plans array (defined in /settings.json).
     var plansArray = Meteor.settings.public.plans;
-    var getPlan    = _.find(plansArray, function(plan){ return plan.name == subscription.type; });
+    var getPlan    = _.find(plansArray, function(plan){ return plan.name == subscription.plan.type; });
     var limit      = getPlan.limit;
+    var usd        = getPlan.amount.usd;
 
     // If we get a plan and limit back, return them to the client for use. Here,
     // we use a ternary to check whether the limit is greater than one so that
@@ -49,8 +50,10 @@ Meteor.methods({
     if( subscription && limit ){
       var plan = {
         subscription: subscription,
-        limit: limit > 1 ? limit + " lists" : limit + " list"
+        limit: limit > 1 ? limit + " lists" : limit + " list",
+        amount: usd
       }
+      console.log(plan);
       return plan;
     } else {
       return false;

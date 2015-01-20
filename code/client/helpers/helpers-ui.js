@@ -15,6 +15,22 @@ UI.registerHelper('currentRoute', function(route){
 });
 
 /*
+* Epoch to String
+* Convert a UNIX epoch string to human readable time.
+*/
+
+UI.registerHelper('epochToString', function(timestamp){
+  if (timestamp){
+    var length = timestamp.toString().length;
+    if ( length == 10 ) {
+      return moment.unix(timestamp).format("MMMM Do, YYYY");
+    } else {
+      return moment.unix(timestamp / 1000).format("MMMM Do, YYYY");
+    }
+  }
+});
+
+/*
 * Limit String
 * Return the proper string based on the number of lists.
 */
@@ -79,6 +95,6 @@ UI.registerHelper('percentage', function(v1,v2){
 
 UI.registerHelper('capitalize', function(string){
   if (string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);  
+    return string.charAt(0).toUpperCase() + string.slice(1);
   }
 });
