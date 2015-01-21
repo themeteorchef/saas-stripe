@@ -22,7 +22,6 @@ Meteor.methods({
 
     // Verify that our user has lists available. If so, return true, if they
     // do not, return false.
-
     if( used < limit ){
       return true;
     } else {

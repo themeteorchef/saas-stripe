@@ -62,7 +62,7 @@ Meteor.methods({
                     subscription: {
                       plan: {
                         name: customer.plan,
-                        lists: 0
+                        used: 0
                       },
                       payment: {
                         card: {

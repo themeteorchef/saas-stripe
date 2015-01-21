@@ -33,7 +33,7 @@ var users = [
     subscription: {
       plan: {
         name: "small",
-        lists: 5
+        used: 5
       },
       payment: {
         card: {

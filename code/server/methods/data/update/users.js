@@ -14,7 +14,7 @@ Meteor.methods({
       // If arguments are valid, continue with updating the user.
       Meteor.users.update(update.user, {
         $set: {
-          "profile.subscription.plan.lists": update.quota
+          "profile.subscription.plan.used": update.quota
         }
       }, function(error){
         if (error) {
