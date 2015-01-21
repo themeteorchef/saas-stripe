@@ -58,6 +58,7 @@ Meteor.methods({
                   password: customer.password,
                   profile: {
                     name: customer.name,
+                    customerId: customerId,
                     subscription: {
                       plan: {
                         name: customer.plan,

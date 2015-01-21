@@ -155,7 +155,6 @@ The first part of Stripe that we'll be covering in this recipe is our signup flo
     </div>
     <div class="form-group">
       <input type="submit" class="btn btn-success btn-block" data-loading-text="Setting up your trial..." style="margin-top: 40px; margin-bottom: 20px;" value="Put me on the rocketship">
-      <p>After you click, we'll setup your account and start your trial. Again, <strong>your card will not be charged until your trial has ended</strong>.</p>
     </div> <!-- end .form-group -->
   </form>
 </template>
@@ -263,6 +262,279 @@ Template.signup.events({
 ```
 
 This means that when our signup form is submitted, it will not attempt to pass the values to the server. Instead, our validation will "catch" the event and relay the submission event to its `submitHandler` (see below). You're welcome to implement this however you see fit. I prefer client-side validation in _addition_ to server-side validation (given to us for free by the Stripe API). Forge your own path!
+
+#### Making it Work
+Okay. So we've got our templates in place and now we need to start interacting with Stripe. Before we do, we want to do one more thing on the client-side: validation. This is important because it ensures that the data we're sending to Stripe and storing in our database is as correct as possible. The last we thing we want is to think we've signed up a bunch of customers when really we just have a bunch of spam accounts being added.
+
+```.lang-javascript
+Template.signup.rendered = function(){
+  $('#application-signup').validate({
+    rules: {
+      name: {
+        required: true
+      },
+      emailAddress: {
+        required: true,
+        email: true
+      },
+      password: {
+        required: true,
+        minlength: 6
+      },
+      cardNumber: {
+        creditcard: true,
+        required: true
+      },
+      expMo: {
+        required: true
+      },
+      expYr: {
+        required: true
+      },
+      cvc: {
+        required: true
+      }
+    },
+    messages: {
+      name: {
+        required: "Please enter your name."
+      },
+      emailAddress: {
+        required: "Please enter your email address to sign up.",
+        email: "Please enter a valid email address."
+      },
+      password: {
+        required: "Please enter a password to sign up.",
+        minlength: "Please use at least six characters."
+      },
+      cardNumber: {
+        creditcard: "Please enter a valid credit card.",
+        required: "Required."
+      },
+      expMo: {
+        required: "Required."
+      },
+      expYr: {
+        required: "Required."
+      },
+      cvc: {
+        required: "Required."
+      }
+    },
+    submitHandler: function(){
+      // We'll handle our actual signup event here.
+    }
+  });
+}
+```
+
+Woof. That's a nice chunk of code. It's actually quite simple. What we're doing here is passing our `<form id="#application-signup">` element to our `validate()` method (given to us by `themeteorchef:jquery-validation`), and then specifying rules and messages for each of the fields in our form. Note: this is where we're using the `name` attribute from our fields that we mentioned earlier. Paired with each rule is a "message" that can be output to the user if validation fails. Perfect. Once our form is valid, we call to our validation's `submitHandler` function to complete signup.
+
+```.lang-javascript
+Meteor.call('createTrialCustomer', customer, function(error, response){
+  if (error) {
+    alert(error.reason);
+    submitButton.button('reset');
+  } else {
+    if ( response.error ) {
+      alert(response.message);
+      submitButton.button('reset');
+    } else {
+      Meteor.loginWithPassword(customer.emailAddress, customer.password, function(error){
+        if (error) {
+          alert(error.reason);
+          submitButton.button('reset');
+        } else {
+          Router.go('/lists');
+          submitButton.button('reset');
+        }
+      });
+    }
+  }
+});
+```
+
+Holy nested functions, Batman! Don't worry. This isn't as complex as it seems. Let's step through it. First, we're calling to a server-side method called `createTrialCustomer`. Can you guess what this does? Let's pause on the client and hop to the server to see what this does for us (hint: it's awesome).
+
+```.lang-javascript
+var Future = Npm.require('fibers/future');
+
+Meteor.methods({
+  createTrialCustomer: function(customer){
+    check(customer, {
+      name: String,
+      emailAddress: String,
+      password: String,
+      plan: String,
+      card: {
+        number: String,
+        exp_month: String,
+        exp_year: String,
+        cvc: String
+      }
+    });
+
+    var emailRegex     = new RegExp(customer.emailAddress, "i");
+    var lookupCustomer = Meteor.users.findOne({"emails.address": emailRegex});
+
+    if ( !lookupCustomer ) {
+      // Our next step will take place in here.
+    }
+  }
+});
+```
+
+If you've been following with [our other recipes](http://themeteorchef.com/recipes), this should all look familiar. First, we pass our `customer` argument to our good friend [Check](). Once we're certain that what we've received from the client is what we expect, we move onto verify that the email address passed doesn't exist in our database already. Why do we do this?
+
+As you'll see in a little bit, we technically create our customer's Meteor account _after_ we've created their account at Stripe (this will make more sense shortly). Checking the email before we do anything else ensure's that our customer 1.) doesn't already exist in our database, and 2.) that we're not creating duplicate customers in Stripe. An ounce of prevention...or something like that.
+
+Alright! Next we get into the meat and potatoes of this thing. Once we've verified that we _didn't_ find a user in our database using `if ( !lookupCustomer ) {}` (or, if lookupCustomer returns nothing), we get freaky deaky on some Stripe API calls. Strap in, this might knock you for a loop.
+
+
+```.lang-javascript
+if ( !lookupCustomer ) {
+  var newCustomer = new Future();
+
+  Meteor.call('stripeCreateCustomer', customer.card, customer.emailAddress, function(error, stripeCustomer){
+    if (error) {
+      console.log(error);
+    } else {
+      var customerId = stripeCustomer.id,
+          plan       = customer.plan;
+
+      Meteor.call('stripeCreateSubscription', customerId, plan, function(error, response){
+        if (error) {
+          console.log(error);
+        } else {
+          // If all goes well with our subscription, we'll handle it here.
+        }
+      });
+    }
+  });
+  return newCustomer.wait();
+} else {
+  throw new Meteor.Error('customer-exists', 'Sorry, that customer email already exists!');
+}
+```
+
+So, first things first, we need to talk about how Stripe stores data. You'll notice two method calls here: `stripeCreateCustomer` and `stripeCreateSubscription`. "Customers" in Stripe speak are users who we want to store and interact with more than once. In the context of Todoodle, this would be someone who creates an account and comes back as a paying customer. [Customers in Stripe](https://stripe.com/docs/api#customer_object) are responsible for storing things like a user's email address, payment information, and account status. Subscriptions on the other hand can be thought of as a sort of recurring event: the glue between a `customer` and a `plan` we've defined.
+
+> A subscription ties a customer to a particular plan you've created.
+>
+> &mdash; [Stripe Subscription Documentation](https://stripe.com/docs/api#subscriptions)
+
+In order to create a subscription, we need to create a _customer_ to bind that subscription to first. This is why we've got the wild nesting going on above. Let's peel back the onion a bit and take a look at creating a customer.
+
+#### Creating a Customer in Stripe
+Before we do anything else, we need to create a customer. Before we create a customer (having fun yet?), we need to load in our Stripe NPM package from earlier and pass it our API key. What does that look like?
+
+```.lang-javascript
+var secret = Meteor.settings.private.stripe.testSecretKey;
+var Stripe = Meteor.npmRequire('stripe')(secret);
+```
+
+Remember how we installed `meteorhacks:npm` earlier and defined a `package.json` file in our project's root? This is where we make use of it. First, we call to our `settings.json` to obtain our API key. Note: we can access any key/value in this file by calling `Meteor.settings`. From there, we just use dot notation to call to the nested object _in_ that file to access the data we want. Here, we're getting our `testSecretKey` for Stripe.
+
+After we've got it, we create a variable called `Stripe` and load in our package via NPM. Pump the brakes!
+
+<div class="note">
+<h3>A quick note</h3>
+<p>When using the meteorhacks:npm package, we need to modify how we load in NPM packages. Where we <em>would</em> call Npm.require with a package we loaded directly through Meteor, the meteorhacks:npm package creates a sort of alias Meteor.npmRequire for us to use. Keep in mind: if we <em>do not</em> use this alias, meteorhacks:npm won't know about the package and our application will crash. The more you know!</p>
+</div>
+
+Good. So, when loading our Stripe package, notice that we also need to pass our API key via a second pair of parentheses after we load the package: `Meteor.npmRequire('stripe')(secret);`. In a sense, this is like invoking the package as a function as passing our `secret` variable as a parameter. Once this is done, Stripe's API will be accessible. Next, let's look at our method for creating our customer. Finally.
+
+```.lang-javascript
+stripeCreateCustomer: function(card, email){
+  // Note: we'd check() both of our arguments here, but I've stripped this out for the sake of brevity.
+
+  var stripeCustomer = new Future();
+
+  Stripe.customers.create({
+    card: card,
+    email: email
+  }, function(error, customer){
+    if (error){
+      stripeCustomer.return(error);
+    } else {
+      stripeCustomer.return(customer);
+    }
+  });
+
+  return stripeCustomer.wait();
+}
+```
+For all the hullabaloo leading up to this point, this is fairly underwhelming. This is a good thing! Lucky for us, Stripe offers official Node.js support (what Meteor is built on top of), so their API is incredibly simplistic. There's two things to pay attention to in here, first, we're creating a `Future()`. What's that?
+
+Future's allow us to interact with asynchronus functions a little easier. Without this, if we called to `Stripe.customers.create()` we would get nothing in return. This function isn't blocking, meaning our program will call it and keep going. Instead, we want to _wait_ until Stripe responds to us and do something with that value. A future means we can return a `.wait()` method from our Meteor method that quite literally "waits" until it receives a return value. Notice that in our call to `Stripe.customers.create()` we call on the `.return()` method to "pass" the value we get from Stripe back to our waiting return. Let that soak in a bit. Once you realize what's happening you might freak out.
+
+With this in place, we're now getting a `customer` object back from Stripe which can be passed to our next method: `stripeCreateSubscription`. This is called from within the callback of our `stripeCreateCustomer` method. There, we pass our brand new `customerId` and `plan` values (from earlier, as part of the `customer` object we passed to `createTrialCustomer`). Let's pull it up:
+
+```.lang-javascript
+stripeCreateSubscription: function(customer, plan){
+  // Again, we'd do a check() here. Don't skip it!
+
+  var stripeSubscription = new Future();
+
+  Stripe.customers.createSubscription(customer, {
+    plan: plan
+  }, function(error, subscription){
+    if (error) {
+      stripeSubscription.return(error);
+    } else {
+      stripeSubscription.return(subscription);
+    }
+  });
+
+  return stripeSubscription.wait();
+}
+```
+
+Oh, Stripe. You're just...so nice to work with. It's almost like deja vu, right? Almost identical to before, we setup our `Future()` (with a different variable name of course) and return instead our `subscription` object. Hot damn! Alright, reverse inception back up to level two in our `createTrialCustomer` method.
+
+```.lang-javascript
+Meteor.call('stripeCreateSubscription', customerId, plan, function(error, response){
+  if (error) {
+    console.log(error);
+  } else {
+    try {
+      var user = Accounts.createUser({
+        email: customer.emailAddress,
+        password: customer.password,
+        profile: {
+          name: customer.name,
+          customerId: customerId,
+          subscription: {
+            plan: {
+              name: customer.plan,
+              lists: 0
+            },
+            payment: {
+              card: {
+                type: stripeCustomer.cards.data[0].brand,
+                lastFour: stripeCustomer.cards.data[0].last4
+              },
+              nextPaymentDue: response.current_period_end
+            }
+          }
+        }
+      });
+      newCustomer.return(user);
+    } catch(exception) {
+      newCustomer.return(exception);
+    }
+  }
+});
+```
+
+Okay, starting to make some sense? With our `stripeCreateSubscription` method complete, we finally create our user in the database. Take note of what's happening here. Because we've made it to this step, we can rest assured that our customer and their subscription exist in Stripe. Here, we take what Stripe has given us and insert it into our own database. This will make it easier to keep track of customers later. To create the account, we use the `emailAddress` and `password` values we pulled from our signup form earlier. But wait a second...what is this `try` and `catch` business?
+
+On the server, Meteor doesn't allow `Accounts.createUser()` to have a callback. This would be fine, but what if calling this produces an error? JavaScript's `try/catch` to the rescue! This is sort of like an `if/else` in that it's saying "ok, _try_ this snippet of code and if it throws an error or exception, pass the exception to the _catch_." In the event that `createUser` fails, we can "catch" its exception and return it to the client. Notice just like with our Stripe method's, we're using a Future here to "wait" for a value to send back to the client.
+
+
+#### Creating a Subscription in Stripe
+#### Creating a User in Meteor
+#### Returning to the Client
 
 Located at `/signup` in our application (I've pre-defined the route for this in `/client/routes/routes-public.js` if you want to take a look), this is the template that controls:
 
