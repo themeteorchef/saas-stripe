@@ -18,12 +18,12 @@ Meteor.methods({
       } else {
         // Get the current userId and perform a lookup.
         var user    = Meteor.userId(),
-            getUser = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription.plan.used": 1}});
+            getUser = Meteor.users.findOne({"_id": user}, {fields: {"subscription.plan.used": 1}});
 
         // Take the returned number, decrement it, and call the updateUserQuota
         // method to update their account. The -- is a JavaScript operator for
         // removing 1 from the value it's prepended to :)
-        var newQuota = --getUser.profile.subscription.plan.used;
+        var newQuota = --getUser.subscription.plan.used;
         var update   = {auth: SERVER_AUTH_TOKEN, user: user, quota: newQuota};
         // Call the method.
         Meteor.call('updateUserQuota', update, function(error){

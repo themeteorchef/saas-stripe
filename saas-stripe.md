@@ -624,4 +624,228 @@ Finally, in the callback of `loginWithPassword`, we test for an error _one more 
 ### Managing Usage
 In our SaaS app, we're offerring todo lists to customers in different tiers (this is what we mapped out in our plan data above). Because of this, we'll need to have some sort of mechanism for keeping track of how many lists a user has created and check that against the _limits_ of their plan. So, if one of our customers, Jane Windex, signs up for the "small" plan, we only want her to have the ability to create five todo lists. If she tries to create more than this, we want to block her ability to do so and suggest that she upgrade her account. How do we do that?
 
-![Sweating bullets](http://media.giphy.com/media/4bWWKmUnn5E4/giphy.gif)
+##### Using Template Helpers to Block Visibility
+Because we have the power of reactivity with Meteor, we can do some really cool stuff using Spacebars templates. In our case, we can wrap the parts of our interface that we want to display _conditionally_. For example, if a user has a "Small" plan and they've used up 5 of their 5 available lists, we want to _hide_ the UI that allows them to add more.
+
+```.lang-javascript
+<template name="todoLists">
+  <div style="margin-top: 0px;" class="page-header clearfix">
+    <h3 class="pull-left">Todo Lists</h3>
+    {{#if listsAvailable}}
+      <a href="#" style="margin-top: 15px;" class="btn btn-success pull-right">New Todo List</a>
+    {{/if}}
+  </div>
+  {{#unless listsAvailable}}
+    <p class="alert alert-warning">Heads up! You've hit your list limit for your current plan (<strong>{{capitalize plan.subscription.plan.name}} - {{plan.limit}}</strong>). <a href="{{pathFor 'billingPlan'}}">Upgrade Now</a></p>
+  {{/unless}}
+  [...]
+</template>
+```
+See what's going on here? We've setup a helper `{{listsAvailable}}` that allows to check whether our current user has lists available on their plan or not. Here, we start by wrapping our "New Todo List" button in an `{{#if listsAvailable}}` helper. This means that _if_ our helper returns true, or, the user has lists available: we'll show them the "New Todo List" button. If not, poof! Cool, right?
+
+Next, we do the inverse of this by making use of Spacebar's (actually, Handlebars) `{{#unless}}` helper, again passing `listsAvailable` as our value to test against. Here, if `listsAvailable` returns `true`, we display a "heads up" message that suggests the [user should upgrade](https://www.youtube.com/watch?v=aocZo3oeNxw).
+
+Okay! This makes sense... sort of. How does it _actually work_, though?
+
+##### Wiring Up Our Template Visibility
+
+We've got two things going on here, but let's start with `listsAvailable`. We're using some sneaky behavior here to prevent making the user's plan data available to the client.
+
+```.lang-javascript
+Template.todoLists.helpers({
+  listsAvailable: function(){
+    var user      = Meteor.userId(),
+        available = Session.get('userListsAvailable_' + user);
+
+    if ( user ) {
+      Meteor.call('checkUserQuota', user, function(error, response){
+        if (error) {
+          alert(error.reason);
+        } else {
+          Session.set('userListsAvailable_' + user, response);
+        }
+      });
+    }
+    return available;
+  },
+  [...]
+});
+```
+So where we might do a `Meteor.users.find()` here, we're instead delegating all of this to the client through a method called `checkUserQuota`. Here, we get our user's ID and when it's available, call to the method on the server. Before we explain how we get the data out to the template, let's hop over to the server and look at the `checkUserQuota` method.
+
+```.lang-javascript
+Meteor.methods({
+  checkUserQuota: function(user){
+    check(user, String);
+
+    var getUser  = Meteor.users.findOne({"_id": user}, {fields: {"subscription.plan": 1}}),
+        plan     = getUser.subscription.plan,
+        planName = plan.name,
+        used     = plan.used;
+
+    var availablePlans = Meteor.settings.public.plans;
+    var currentPlan    = _.find(availablePlans, function(plan){ return plan.name == planName; });
+    var limit          = currentPlan.limit;
+
+    if( used < limit ){
+      return true;
+    } else {
+      return false;
+    }
+  },
+  [...]
+});
+```
+
+This one is interesting. We want our method to do two things: get the current user's subscription information (specifically, we want the user's plan data) and then we want to get our global plan data from `settings.json`. The goal here is to see whether or not the user's `subscription.plan.used` value is less than the gobal limit for their plan type. If it is, we return `true`, it it's not, we return `false`. Why do this here?
+
+The reason we do this here is that it avoids having to expose the user's subscription information on the client. Our server has access to all of a user's data, which means we can have it do the messy checking work without mucking up our client-side controller. This is one of those stylistic things that, while not _entirely_ necessary, helps to keep your code a little bit cleaner.
+
+There's one thing above that may not be entirely clear. Above we're making use of the `_.find()` method given to us by the `underscore` package. This function is really handy. First, we pass our `availablePlans` array which is equal to the list of plans we've defined in our `settings.json` file. Next, for each plan, we compare the plan's `name` field to our user's `plan.name` field. This essentialy "plucks" the plan that our user is signed up for out of the array and sets it euqal to our `currentPlan` variable. Cool, right?
+
+```.lang-javascript
+Meteor.call('checkUserQuota', user, function(error, response){
+  if (error) {
+    alert(error.reason);
+  } else {
+    Session.set('userListsAvailable_' + user, response);
+  }
+});
+```
+Back on the client, we take the returned `true` or `false` value and set it equal to a `Session` variable that's unique to our current user. The reason we're doing this here is that if we were simply to return our value from our method, our helper wouldn't be able to "see" it. Doing this ensures that the value is made accessible to the helper when it's ready. Neat! Outside of our method call, we simply return a variable `available` from our helper that's assigned to `Session.get('userListsAvailable_' + user)`.
+
+It should be obvious now, but as we're simply returning `true` or `false`, this will correctly toggle our template helper's, revealing the proper UI depending on the user's account status. [Woah](http://media.giphy.com/media/nVkpHJrIwcI8/giphy.gif).
+
+##### Displaying the User's Plan
+There's one more thing we need to call attention to before we move on. Notice that back in our `todoLists` template, when the user _does not_ have lists available, we display an alert message that lets the user know their current plan. Where the heck is that coming from?
+
+```.lang-javascript
+UI.registerHelper('plan', function(){
+  var user = Meteor.userId(),
+      plan = Session.get('currentUserPlan_' + user);
+
+  if ( user ) {
+    Meteor.call('checkUserPlan', user, function(error, response){
+      if (error) {
+        alert(error.reason);
+      } else {
+        Session.set('currentUserPlan_' + user, response);
+      }
+    });
+  }
+  return plan;
+});
+```
+Because we're making reference to the user's plan data in multiple spots within our application, we can make a UI helper that returns this inforamation for us. This means that instead of having to call the same code in multiple locations, we can simply make one call via a helper and then access the data through a template helper.
+
+Here, we've setup `{{plan}}` to be a helper that's accessible anywhere in our app. Notice that we use the same `Session` variable trick from the `listsAvailable` helper in our `todoLists` template. What exactly is `plan` returning, though?
+
+```.lang-javascript
+checkUserPlan: function(user){
+  check(user, String);
+
+  var getUser  = Meteor.users.findOne({"_id": user}, {fields: {"subscription": 1}}),
+  subscription = getUser.subscription;
+
+  var availablePlans = Meteor.settings.public.plans;
+  var currentPlan    = _.find(availablePlans, function(plan){ return plan.name == subscription.plan.name; });
+  var limit          = currentPlan.limit;
+  var amount         = currentPlan.amount.usd;
+
+  if( subscription && limit ){
+    var planData = {
+      subscription: subscription,
+      limit: limit > 1 ? limit + " lists" : limit + " list",
+      amount: amount
+    }
+    return planData;
+  } else {
+    return false;
+  }
+}
+```
+
+This is very similar to our `checkUserQuota` method, but instead of determining whether the user has todo lists available, here we expose their plan data to our helper. Just like before, we pull up the user's plan information and use the underscore `_.find()` method to compare against our global plan data.
+
+Next, we create a new object `planData` to return to the client that includes the information we want accessible to our helper. As a little UX touch, we use a ternary operator to check the limit on the plan and append a string corresponding to the plan's plurarlity. So, for example, if our user's limit is one, we get the correct contextual `1 list` string, or if they have 5, we get `5 lists`. Go ahead, [flex](http://youtu.be/rec_7Si0MEA?t=1m4s), that's pretty boss.
+
+```.lang-javascript
+<p class="alert alert-warning">Heads up! You've hit your list limit for your current plan (<strong>{{capitalize plan.subscription.plan.name}} - {{plan.limit}}</strong>). <a href="#">Upgrade Now</a></p>
+```
+
+Note that now on the client, we can access our plan information via the `{{plan}}` helper! It's a subtle touch, but very important as it guides our user down the correct path.
+
+<div class="note">
+<h3>A quick note</h3>
+<p>In the example above, we're actually combing two helpers: capitalize and plan. We've explained plan, however, capitalize is an additional helper created to capitalize the first letter of the string we pass. We're doing this here because our returned plan is lowercase and sometimes we need to capitalize it. If you're curious how this is done, header over to /client/helpers/helpers-ui.js to see it in action!</p>
+</div>
+
+#### Displaying the User's Plan on the Billing Screen
+
+Home stretch! There's just one more thing that we need to do before we leave the rest to part two. Over in our user's `/billing` view (specifically our `billingOverview` template), we want to display their plan information so they can see the status of their account and decide whether or not to upgrade/downgrade.
+
+```.lang-markup
+<template name="billingOverview">
+  <div class="panel panel-default billing-module">
+    <div class="panel-heading">
+      <h3 class="panel-title">Billing Overview</h3>
+    </div>
+    <div class="panel-body">
+      <ul class="list-group">
+        <li class="list-group-item bm-block clearfix">
+          <span class="bm-block-label">Current Plan</span>
+          <div class="bm-block-content">
+            <span class="plan-name-quota"><strong>{{capitalize plan.subscription.plan.name}}</strong> &mdash; {{plan.subscription.plan.used}} of {{plan.limit}} used</span>
+            <div class="usage-bar">
+              <div class="used" style="width:{{percentage plan.subscription.plan.used plan.limit}};"></div>
+            </div>
+          </div>
+          <a href="{{pathFor 'billingPlan'}}" disabled="disabled" class="btn btn-small btn-default pull-right">Change Plan</a>
+        </li>
+        <li class="list-group-item bm-block clearfix">
+          <span class="bm-block-label">Payment</span>
+          <div class="bm-block-content">
+            <span><strong>{{plan.subscription.payment.card.type}}</strong> &mdash; {{plan.subscription.payment.card.lastFour}}</span>
+            <span>Next payment due: <strong>{{epochToString plan.subscription.payment.nextPaymentDue}}</strong></span>
+            <span>Amount: <strong>{{plan.amount}}</strong></span>
+          </div>
+          <a href="{{pathFor 'billingCard'}}" disabled="disabled" class="btn btn-small btn-default pull-right">Update Card</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
+```
+A few things to pay attention to. First, we display the user's current plan information (number of lists used of those available) by accessing our `{{plan}}` template helper from earlier. This is straight forward: we're just outputting the values to the page. But just beneath that...wait, woah, what is that? A usage bar!
+
+```.lang-markup
+<div class="usage-bar">
+  <div class="used" style="width:{{percentage plan.subscription.plan.used plan.limit}};"></div>
+</div>
+```
+
+Making use of our `{{plan}}` helper and a dash of CSS-fu, we can display the user's current plan usage as a percentage of a bar! To do it, we make use of a helper `{{percentage}}` that we've defined in `clients/helpers/helpers-ui.js` that takes our user's current lists `used` value and divides it by their current plan's `limit`. The result is a percentage that we can use to set the width on the "used" bar to visually show how much of a plan has been used. [Oh dear](http://media2.giphy.com/media/QHXvwJwtUBLBm/giphy.gif).
+
+Last but not least, just beneath this block we display our user's payment information...
+
+```.lang-markup
+<div class="bm-block-content">
+  <span><strong>{{plan.subscription.payment.card.type}}</strong> &mdash; {{plan.subscription.payment.card.lastFour}}</span>
+  <span>Next payment due: <strong>{{epochToString plan.subscription.payment.nextPaymentDue}}</strong></span>
+  <span>Amount: <strong>{{plan.amount}}</strong></span>
+</div>
+```
+Just like before, thanks to our `{{plan}}` helper we can call this information up toot sweet. Now, our user can see all of their current plan information on screen! Not exciting to you? Consider this is how they'll decide whether or not they should keep their subscription active. Yeah. That's what pays for your dog food, bro. Don't hate.
+
+#### That's it!
+We did it! Well, at least part of it. This concludes part 1 of 2. It was a lot of work, so give yourself a pat on the back.
+
+![Zack and Slater patting themselves on the back](http://media.giphy.com/media/9Q249Qsl5cfLi/giphy.gif)
+
+### Wrap Up & Summary
+Very cool stuff. In this recipe we learned how to sign users up for our app, create a customer with a subscription on Stripe, and show our customer's their plan information. We also learned how to trigger state in our app to encourage user's to upgrade if and when they hit their current plan's limits. Wild stuff.
+
+#### In part two...
+We'll take a look at helping our customer update their plan information, cancel their subscription (nooo!), manage their credit card, and send invoices when our plan renews! Get excited. When we're done, we'll have a full-blown payments system using Stripe.
+
+Until next time!

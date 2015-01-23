@@ -10,8 +10,8 @@ Meteor.methods({
     check(user, String);
 
     // Query for our user and get their current quota.
-    var getUser      = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription.plan": 1}}),
-        plan         = getUser.profile.subscription.plan,
+    var getUser      = Meteor.users.findOne({"_id": user}, {fields: {"subscription.plan": 1}}),
+        plan         = getUser.subscription.plan,
         planName     = plan.name,
         used         = plan.used;
 
@@ -34,8 +34,8 @@ Meteor.methods({
     check(user, String);
 
     // Query for our user and get their current plan information.
-    var getUser      = Meteor.users.findOne({"_id": user}, {fields: {"profile.subscription": 1}}),
-        subscription = getUser.profile.subscription;
+    var getUser      = Meteor.users.findOne({"_id": user}, {fields: {"subscription": 1}}),
+        subscription = getUser.subscription;
 
     // Find the correct plan in our plans array (defined in /settings.json).
     var availablePlans = Meteor.settings.public.plans;

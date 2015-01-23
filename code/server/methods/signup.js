@@ -58,19 +58,19 @@ Meteor.methods({
                   password: customer.password,
                   profile: {
                     name: customer.name,
-                    customerId: customerId,
-                    subscription: {
-                      plan: {
-                        name: customer.plan,
-                        used: 0
+                  },
+                  customerId: customerId,
+                  subscription: {
+                    plan: {
+                      name: customer.plan,
+                      used: 0
+                    },
+                    payment: {
+                      card: {
+                        type: stripeCustomer.cards.data[0].brand,
+                        lastFour: stripeCustomer.cards.data[0].last4
                       },
-                      payment: {
-                        card: {
-                          type: stripeCustomer.cards.data[0].brand,
-                          lastFour: stripeCustomer.cards.data[0].last4
-                        },
-                        nextPaymentDue: response.current_period_end
-                      }
+                      nextPaymentDue: response.current_period_end
                     }
                   }
                 });

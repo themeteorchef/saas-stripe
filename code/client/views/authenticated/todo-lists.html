@@ -6,7 +6,7 @@
     {{/if}}
   </div>
   {{#unless listsAvailable}}
-    <p class="alert alert-warning">Heads up! You've hit your list limit for your current plan (<strong>{{capitalize plan.subscription.plan.name}} - {{plan.limit}}</strong>). <a href="{{pathFor 'billingPlan'}}">Upgrade Now</a></p>
+    <p class="alert alert-warning">Heads up! You've hit your list limit for your current plan (<strong>{{capitalize plan.subscription.plan.name}} - {{plan.limit}}</strong>). <a href="#">Upgrade Now</a></p>
   {{/unless}}
   <div class="list-group">
     {{#each lists}}

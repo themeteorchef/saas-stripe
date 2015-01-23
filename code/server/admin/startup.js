@@ -42,7 +42,8 @@ var users = [
         },
         nextPaymentDue: ( new Date() ).getTime()
       }
-    }
+    },
+    customerId: "13951jfoijf13oij"
   }
 ]
 
@@ -58,25 +59,34 @@ for(i=0; i < users.length; i++){
     // Create the new user.
     var userId = Accounts.createUser({
       email: userEmail,
-      password: users[i].password,
+      password: user.password,
       profile: {
-        name: users[i].name,
-        subscription: users[i].subscription
+        name: user.name
       }
     });
 
-    // Once the user is available, give them a set of todo lists equal to their
-    // plan limit. Wrap this in a setTimeout to give our collection a chance to
-    // be initialized on the server.
-
-    Meteor.setTimeout(function(){
-      for(i=0; i < user.subscription.plan.lists; i++){
-        Meteor.call('insertTodoList', userId, function(error){
-          if (error) {
-            console.log(error);
+    if (userId){
+      Meteor.users.update(userId,{
+        $set: {
+          subscription: user.subscription,
+          customerId: user.customerId
+        }
+      }, function(error, response){
+        if (error) {
+          console.log(error);
+        } else {
+          // Once the user is available, give them a set of todo lists equal to their
+          // plan limit. Wrap this in a setTimeout to give our collection a chance to
+          // be initialized on the server.
+          for(i=0; i < user.subscription.plan.used; i++){
+            Meteor.call('insertTodoList', userId, function(error){
+              if (error) {
+                console.log(error);
+              }
+            });
           }
-        });
-      }
-    }, 3000);
+        }
+      });
+    }
   }
 }
