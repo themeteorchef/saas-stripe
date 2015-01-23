@@ -160,7 +160,14 @@ The first part of Stripe that we'll be covering in this recipe is our signup flo
 </template>
 ```
 
-Note: our actual template is _slightly_ more complex than this (the version [in the source]() contains some "heads up" messages for customers and some Bootstrap grid elements). Here, we're focused on just the `<form>` element where the real action happens. Lucky for us, this is actually pretty simple.
+Located at `/signup` in our application (I've pre-defined the route for this in `/client/routes/routes-public.js` if you want to take a look), this is the template that controls:
+
+1. Creating an account for our new customer.
+2. Capturing their credit card information.
+3. Creating a customer on Stripe.
+4. Starting a "subscription" for the customer on Stripe.
+
+But wait! We should note that our goal here is _not to charge their credit card_. Instead, we only want to "hold on" to their credit card information, but not charge it. Why? The majority of SaaS products allow customers to "demo" or "trial" their application. We're no different. We want to ensure that our customers get an opportunity to make sure Todoodle is right for them before we charge them.
 
 First, we start by gathering some basic information: a full name, email address, and password for our customer. We've choose to solely use the `accounts-password` package for this, but you could [extend this to include oAuth logins as well](http://themeteorchef.com/recipes/roll-your-own-authentication). Next, we link to another template `{{>selectPlan}}`. What's that about?
 
@@ -331,6 +338,21 @@ Template.signup.rendered = function(){
 Woof. That's a nice chunk of code. It's actually quite simple. What we're doing here is passing our `<form id="#application-signup">` element to our `validate()` method (given to us by `themeteorchef:jquery-validation`), and then specifying rules and messages for each of the fields in our form. Note: this is where we're using the `name` attribute from our fields that we mentioned earlier. Paired with each rule is a "message" that can be output to the user if validation fails. Perfect. Once our form is valid, we call to our validation's `submitHandler` function to complete signup.
 
 ```.lang-javascript
+var customer = {
+  name: $('[name="fullName"]').val(),
+  emailAddress: $('[name="emailAddress"]').val(),
+  password: $('[name="password"]').val(),
+  plan: $('[name="selectPlan"]:checked').val(),
+  card: {
+    number: $('[name="cardNumber"]').val(),
+    exp_month: $('[name="expMo"]').val(),
+    exp_year: $('[name="expYr"]').val(),
+    cvc: $('[name="cvc"]').val()
+  }
+}
+
+var submitButton = $('input[type="submit"]').button('loading');
+
 Meteor.call('createTrialCustomer', customer, function(error, response){
   if (error) {
     alert(error.reason);
@@ -354,7 +376,9 @@ Meteor.call('createTrialCustomer', customer, function(error, response){
 });
 ```
 
-Holy nested functions, Batman! Don't worry. This isn't as complex as it seems. Let's step through it. First, we're calling to a server-side method called `createTrialCustomer`. Can you guess what this does? Let's pause on the client and hop to the server to see what this does for us (hint: it's awesome).
+Holy nested functions, Batman! Don't worry. This isn't as complex as it seems. Let's step through it. First, we're defining a new object to store all of the data from our signup form. Simple. Next, as an added UX touch we call to Bootstrap's `.button('loading')` method, passing `loading` as our parameter. This is totally optional (and really, only if you're using Bootstrap), but this allows us to toggle state when our submit button is clicked. So, instead of having the user click and nothing happens, the button changes to read "Setting up your trial..." Pretty good. [Pretty, pretty, pretty, pretty good](http://youtu.be/O_05qJTeNNI?t=18s).
+
+Next, we're calling to a server-side method called `createTrialCustomer`. Can you guess what this does? Let's pause on the client and hop to the server to see what this does for us (hint: it's awesome).
 
 ```.lang-javascript
 var Future = Npm.require('fibers/future');
@@ -468,7 +492,31 @@ For all the hullabaloo leading up to this point, this is fairly underwhelming. T
 
 Future's allow us to interact with asynchronus functions a little easier. Without this, if we called to `Stripe.customers.create()` we would get nothing in return. This function isn't blocking, meaning our program will call it and keep going. Instead, we want to _wait_ until Stripe responds to us and do something with that value. A future means we can return a `.wait()` method from our Meteor method that quite literally "waits" until it receives a return value. Notice that in our call to `Stripe.customers.create()` we call on the `.return()` method to "pass" the value we get from Stripe back to our waiting return. Let that soak in a bit. Once you realize what's happening you might freak out.
 
-With this in place, we're now getting a `customer` object back from Stripe which can be passed to our next method: `stripeCreateSubscription`. This is called from within the callback of our `stripeCreateCustomer` method. There, we pass our brand new `customerId` and `plan` values (from earlier, as part of the `customer` object we passed to `createTrialCustomer`). Let's pull it up:
+With this in place, we're now getting a `customer` object back from Stripe which can be passed to our next method: `stripeCreateSubscription`. This is called from within the callback of our `stripeCreateCustomer` method. There, we pass our brand new `customerId` and `plan` values (from earlier, as part of the `customer` object we passed to `createTrialCustomer`). Before we jump into the code for this, we need to configure some stuff over at Stripe.
+
+#### Defining Plans
+Recall that subscriptions in Stripe are like gluing a `plan` to your `customer`. Up until now, though, the only place we've defined plans is in our application. In order for Stripe to interpret the subscriptions we send to it, we need to [define plans via their dashboard](https://dashboard.stripe.com/test/plans). This is quick and easy, let's take a look.
+
+![Stripe: Plans View](https://s3.amazonaws.com/themeteorchef-cdn/recipes/005_building-a-saas-with-meteor-stripe/stripe-plans-view.png)
+
+Here, we've already defined our plans. We want our plans to be identical to what we've defined in our `settings.json` file so that when we interact with Stripe, we don't have any conflicts. To add a _new_ plan (what you'll need to do), from this screen click on the `+ New` link just beneath the search field.
+
+![Stripe: Create a New Plan](https://s3.amazonaws.com/themeteorchef-cdn/recipes/005_building-a-saas-with-meteor-stripe/stripe-new-plan.png)
+
+This will give you access to the "Create a new plan" modal. This should mostly be straightforward. Of note, make sure that the `ID` field here is identical to the `name` field of the plan in `settings.json`. More specifically, this should be a lowercase version of the plan name. Think of it this way: the `ID` field in this modal is what the computer uses to identify your plan and the `Name` field is what you use to identify the plan.
+
+Aside from this, the only other thing to pay attention to is the `Trial period days` field. This does exactly what you might think: determines how many days _before_ Stripe will process a charge on the card. In the case of our application, we'll set it to one day for demonstration purposes. In your own application, you'll probably want to try a more standard 15, 30, or 60 day trial.
+
+Make sense? Great! Let's get back to the code.
+
+<div class="note">
+<h3>A quick note</h3>
+<p>You may be asking, can't we automate this a bit? The answer is: yes. Stripe's API is excellent, and you <em>can</em> update, insert, and remove plans using it. If you intend to do a lot of experiments with pricing, it may be worth investing in adding a few methods to handle updating Stripe whenever you change the plans in settings.json. Not necessary, but totally possible and super handy if you have the time.</p>
+</div>
+
+#### Creating a Subscription in Stripe
+
+Now that we have a customer setup in Stripe and our plans defined, we can get a subscription in place so that we can charge our customer on a recurring basis. Let's take a look:
 
 ```.lang-javascript
 stripeCreateSubscription: function(customer, plan){
@@ -529,23 +577,51 @@ Meteor.call('stripeCreateSubscription', customerId, plan, function(error, respon
 
 Okay, starting to make some sense? With our `stripeCreateSubscription` method complete, we finally create our user in the database. Take note of what's happening here. Because we've made it to this step, we can rest assured that our customer and their subscription exist in Stripe. Here, we take what Stripe has given us and insert it into our own database. This will make it easier to keep track of customers later. To create the account, we use the `emailAddress` and `password` values we pulled from our signup form earlier. But wait a second...what is this `try` and `catch` business?
 
-On the server, Meteor doesn't allow `Accounts.createUser()` to have a callback. This would be fine, but what if calling this produces an error? JavaScript's `try/catch` to the rescue! This is sort of like an `if/else` in that it's saying "ok, _try_ this snippet of code and if it throws an error or exception, pass the exception to the _catch_." In the event that `createUser` fails, we can "catch" its exception and return it to the client. Notice just like with our Stripe method's, we're using a Future here to "wait" for a value to send back to the client.
+On the server, Meteor doesn't allow `Accounts.createUser()` to have a callback. This would be fine, but what if calling this produces an error? JavaScript's [`try/catch`](http://eloquentjavascript.net/08_error.html#p_ZBsTKhGA4i) to the rescue! This is sort of like an `if/else` in that it's saying "ok, _try_ this snippet of code and if it throws an error or exception, pass the exception to the _catch_." In the event that `createUser` fails, we can "catch" its exception and return it to the client. Notice just like with our Stripe method's, we're using a Future here to "wait" for a value to send back to the client.
 
+Once we have that value (if our method succeeds, this value is arbitrary, if it fails, this value will contain an error to display on the client), we can return to the client. [Zwoop! Back up another level](http://youtu.be/cMkmGb1W-9s?t=1m1s).
 
-#### Creating a Subscription in Stripe
-#### Creating a User in Meteor
 #### Returning to the Client
+Okay, so we're all setup with Stripe, our user exists in the database...now what? Now, we must bow down to the User Experience Gods and complete our signup flow. Let's see how we do it.
 
-Located at `/signup` in our application (I've pre-defined the route for this in `/client/routes/routes-public.js` if you want to take a look), this is the template that controls:
+```.lang-javascript
+Meteor.call('createTrialCustomer', customer, function(error, response){
+  if (error) {
+    alert(error.reason);
+    submitButton.button('reset');
+  } else {
+    if ( response.error ) {
+      alert(response.message);
+      submitButton.button('reset');
+    } else {
+      Meteor.loginWithPassword(customer.emailAddress, customer.password, function(error){
+        if (error) {
+          alert(error.reason);
+          submitButton.button('reset');
+        } else {
+          Router.go('/lists');
+          submitButton.button('reset');
+        }
+      });
+    }
+  }
+});
+```
 
-1. Creating an account for our new customer.
-2. Capturing their credit card information.
-3. Creating a customer on Stripe.
-4. Starting a "subscription" for the customer on Stripe.
+Okay, so. There's a few tricks going on here to tie up all of our loose ends. The first is that we're watching for an `error` on our method, and if one occurs, alerting the given reason for the error _and_ (ready for this???), resetting the state of our submit button from earlier. Note: this doesn't reset our entire form, but rather, makes it possible to "click" submit again. Woo doggie.
 
-But wait! We should note that our goal here is _not to charge their credit card_. Instead, we only want to "hold on" to their credit card information, but not charge it. Why? The majority of SaaS products allow customers to "demo" or "trial" their application. We're no different. We want to ensure that our customers get an opportunity to make sure Todoodle is right for them before we charge them. Before we get too far into details, let's see how this template works.
+After this, in our `else`, we're looking for _another_ error. [What, what, what](https://www.youtube.com/watch?v=_3PUu88nOcw)? Recall that on the server, we were using a `Future` to "wait" on Stripe for a response. Because of this, in the event that our method throws an error on the server, we return it to the client, _but_ it comes through in the response argument. Because of this, for added precaution we want to ensure that an error object _is not_ defined on the response. If it is, we do our hot little button reset trick. If not...
 
+Time to login our user! This is actually pretty cool. Because we technically already "know" our user's email address and password (remember, these were defined earlier in our `customer` object at the top of our `submitHandler`), we can just "reuse" these to log them in. We can get away with this because at this point, we know they have an account in our database with these values. Sneaky!
 
+Finally, in the callback of `loginWithPassword`, we test for an error _one more time_ and if all is well, redirect the user to the `/lists` view where they can see their current todo lists. We also reset the button again for good measure. Woah! Our signup flow is complete. At this point, we've succesfully signed our user up for an account with a trial on Stripe. [High fives all around](http://media2.giphy.com/media/DohrJX1h2W5RC/giphy.gif)!
+
+<div class="note">
+<h3>A quick note</h3>
+<p>Alright, you know what time it is. Let's take a break and do a little exercise before we keep going. <a href="http://youtu.be/Y6leITt0gJ8?t=7m">1 and 2 and 3 and...</a></p>
+</div>
 
 ### Managing Usage
 In our SaaS app, we're offerring todo lists to customers in different tiers (this is what we mapped out in our plan data above). Because of this, we'll need to have some sort of mechanism for keeping track of how many lists a user has created and check that against the _limits_ of their plan. So, if one of our customers, Jane Windex, signs up for the "small" plan, we only want her to have the ability to create five todo lists. If she tries to create more than this, we want to block her ability to do so and suggest that she upgrade her account. How do we do that?
+
+![Sweating bullets](http://media.giphy.com/media/4bWWKmUnn5E4/giphy.gif)
