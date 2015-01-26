@@ -58,7 +58,16 @@ Meteor.methods({
                   password: customer.password,
                   profile: {
                     name: customer.name,
-                  },
+                  }
+                });
+
+                // Before we return our user to the client, we need to perform a Meteor.users.update
+                // on our user. This is done because we need to add our subscription data to our
+                // customer, however, we don't want to store it in our customer's profile object.
+                // Unfortunately, the only way to do this is to wait until the user exists and
+                // *then* add the subscription data.
+
+                var subscription = {
                   customerId: customerId,
                   subscription: {
                     plan: {
@@ -73,10 +82,19 @@ Meteor.methods({
                       nextPaymentDue: response.current_period_end
                     }
                   }
+                }
+
+                // Perform an update on our new user.
+                Meteor.users.update(user, {
+                  $set: subscription
+                }, function(error, response){
+                  if (error){
+                    console.log(error);
+                  } else {
+                    // Once the subscription data has been added, return to our Future.
+                    newCustomer.return(user);
+                  }
                 });
-                // When our new customer is fully baked, return their ID back to our future
-                // to complete signup and log the user in on the client. Booyah!
-                newCustomer.return(user);
               } catch(exception) {
                 newCustomer.return(exception);
               }
