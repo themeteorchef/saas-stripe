@@ -1,12 +1,10 @@
 #### The Meteor Chef
 #### \#005 - Building a SaaS with Meteor: Stripe
 
-In this recipe we'll help a new SaaS startup Todoodle (a todo list creator)
-integrate Stripe into their app. We'll learn about single charges,
-subscriptions, coupon codes, invoices, and how to handle events via webhooks.
+In this recipe (two parts) we'll help a new SaaS startup Todoodle (a todo list creator) integrate Stripe into their app. We'll learn about signing up users, creating customers and subscriptions in stripe, managing a customer's usage,  and displaying a customer's  current plan information.
 
 
-[Read on The Meteor Chef](http://themeteorchef.com/recipes/saas-stripe)  
+[Read Part 1 on The Meteor Chef](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1)  
 
 [Demo the Recipe](http://tmc-005-demo.meteor.com)  
 

@@ -5,13 +5,19 @@ Although there are multiple parts to this recipe, what we need in terms of packa
 ```.lang-bash
 meteor add meteorhacks:npm
 ```
-We'll make use of the [`meteorhacks:npm`](https://atmospherejs.com/meteorhacks/npm) package to gain access to help us load up the official [Stripe for Node.js]() package. This will give us access to Stripe's API.
+We'll make use of the [`meteorhacks:npm`](https://atmospherejs.com/meteorhacks/npm) package to gain access to help us load up the official [Stripe for Node.js](https://www.npmjs.com/package/stripe) package. This will give us access to Stripe's API.
 
 <p class="block-header">Terminal</p>
 ```.lang-bash
 meteor add momentjs:moment
 ```
 Because we'll be working with a handful of dates, we'll make use of the [`momentjs:moment`](https://atmospherejs.com/momentjs/moment) package to help us with things like converting unix timestamps to human readable text.
+
+<p class="block-header">Terminal</p>
+```.lang-bash
+meteor add random
+```
+We'll be doing some work on the server later and we'll make use of the [`random`](http://docs.meteor.com/#/full/random) package to help us lock down our methods a bit.
 
 <div class="note">
   <h3>A quick note</h3>
@@ -67,7 +73,7 @@ The first thing we want to do is to add our Stripe keys. Stripe gives us four ke
 
 Hang on a sec! You just said we'll only be using our _private_ keys. Right you are. However, it's important to know how to set _both_ your private and public keys. Note: Stripe uses a slightly different naming convention for their keys, so, `private == secret` and `public == publishable`. The meaning is exactly the same, but it's good to pay attention to. Also notice in the above example that we've broken our keys up into two objects `private` and `public`. What gives?
 
-Recall from earlier that by default, our `settings.json` file keeps everything _private_ and only accessible on the server. To get around this, Meteor acknowledges anything we place in our a `public` object in our `settings.json` file as "allowed on the client." This is handy for things like storing public keys and other non-sensitive data. For organizational purposes, we've added a `private` object. Keep in mind this isn't _necessary_ for the data inside to show up on the server and merely a personal convention for [keeping things tidy](http://youtu.be/Lzt82V-xtfA?t=2m35s).
+Recall from earlier that by default, our `settings.json` file keeps everything _private_ and only accessible on the server. To get around this, Meteor acknowledges anything we place in our `public` object in our `settings.json` file as "allowed on the client." This is handy for things like storing public keys and other non-sensitive data. For organizational purposes, we've added a `private` object. Keep in mind this isn't _necessary_ for the data inside to show up on the server and merely a personal convention for [keeping things tidy](http://youtu.be/Lzt82V-xtfA?t=2m35s).
 
 Okay, awesome! We've got our keys setup for Stripe, but there's one more thing we want to add to our configuration file before we move on: plan data. This is a bit preemptive as we won't need to access the data for a bit, but it's good to take care of it now.
 
@@ -130,7 +136,7 @@ The one thing to pay attention to is that we've added this to our `public` objec
 ### Signup
 The first part of Stripe that we'll be covering in this recipe is our signup flow. This is one of the more important steps because it's _how we get customers into our app_. If this doesn't work, our business doesn't work, so we need to pay attention. The first thing we need to do is pull together a template for our signup page. Let's take a look:
 
-<p class="block-header">/settings.json</p>
+<p class="block-header">/client/views/public/signup.html</p>
 ```.lang-markup
 <template name="signup">
   <form id="application-signup" class="signup">
@@ -169,10 +175,11 @@ Located at `/signup` in our application (I've pre-defined the route for this in 
 
 But wait! We should note that our goal here is _not to charge their credit card_. Instead, we only want to "hold on" to their credit card information, but not charge it. Why? The majority of SaaS products allow customers to "demo" or "trial" their application. We're no different. We want to ensure that our customers get an opportunity to make sure Todoodle is right for them before we charge them.
 
-First, we start by gathering some basic information: a full name, email address, and password for our customer. We've choose to solely use the `accounts-password` package for this, but you could [extend this to include oAuth logins as well](http://themeteorchef.com/recipes/roll-your-own-authentication). Next, we link to another template `{{>selectPlan}}`. What's that about?
+First, we start by gathering some basic information: a full name, email address, and password for our customer. We've choosen to solely use the `accounts-password` package for this, but you could [extend this to include oAuth logins as well](http://themeteorchef.com/recipes/roll-your-own-authentication). Next, we link to another template `{{>selectPlan}}`. What's that about?
 
 #### Selecting a Plan
 
+<p class="block-header">/client/views/public/signup/select-plan.html</p>
 ```.lang-markup
 <template name="selectPlan">
   <div class="list-group select-plan">
@@ -186,8 +193,9 @@ First, we start by gathering some basic information: a full name, email address,
 </template>
 ```
 
-Select plan is one of the first spots that we pull in our plan data that we configured in `settings.json` earlier. The goal of this templateis two-fold: display all of the available plans to our prospective customer and allow them to pick which one they'd like. Let's take a look at the controller for this as there are a few moving parts that are important to understand.
+The select a plan block is one of the first spots that we pull in our plan data that we configured in `settings.json` earlier. The goal of this template is two-fold: display all of the available plans to our prospective customer and allow them to pick which one they'd like. Let's take a look at the controller for this as there are a few moving parts that are important to understand.
 
+<p class="block-header">/client/controllers/public/select-plan.js</p>
 ```.lang-javascript
 Template.selectPlan.helpers({
   plans: function(){
@@ -201,8 +209,8 @@ Template.selectPlan.helpers({
 
 First, we start by adding a helper to our template called `plans`. The thinking here is very simple. All we want to do is return our list of plans from our `settings.json` file. This is done by calling to our settings file by using the `Meteor.settings` method. Just like any other JSON object, here we can just specify the nesting of our plans object using [`. (dot)` notation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Working_with_Objects). Because our data is stored as an array, we can return it directly to our template without any fuss. Nice!
 
+<p class="block-header">/client/controllers/public/select-plan.js</p>
 ```.lang-javascript
-
 Template.selectPlan.rendered = function(){
   var firstPlanItem = $('.select-plan a:first-child');
   firstPlanItem.addClass('active');
@@ -221,11 +229,12 @@ Template.selectPlan.events({
 
 Next up is a two parter: selecting plans. By default, we want to ensure that we're showing a plan as selected. To help us include the selected plan in our form data, if you look back up at the `selectPlans` template above, you'll notice we have a hidden `radio` input being assigned to each option. This allows us to look at our signup form to get the "checked" value. We hide it on the template as a UX touch. In our controller above, we first handle checking a "default" option when the template is rendered. Here we're just picking the first item/plan in our list, but if you're smart, you'll set this up to automatically select the most popular option based on your [metrics](http://www.quickmeme.com/img/5d/5d8664cf92e4ce604998ebc905667d3186818aee1c8786b9cfd51712eead636e.jpg).
 
-Just below that, we want to handle the event for "checking" our selected option. This is admittedly a bit tricky. Because we're watching for a click event on our `.list-group-item` element, we need to "find" our radio button and check it whenever it's parent is clicked. Confused? To help us out, we can use a little jQuery-fu to find the radio button and mark it as checked `parent.find('input[type="radio"]').prop("checked", true);`. Wonderful. This is one of those "more than one way to skin a cat" type of problems, so make sure to play with it!
+Just below that, we want to handle the event for "checking" our selected option. This is admittedly a bit tricky. Because we're watching for a click event on our `.list-group-item` element, we need to "find" our radio button and check it whenever its parent is clicked. Confused? To help us out, we can use a little jQuery-fu to find the radio button and mark it as checked `parent.find('input[type="radio"]').prop("checked", true);`. Wonderful. This is one of those "more than one way to skin a cat" type of problems, so make sure to play with it!
 
 #### Credit Card Information
 Now that we have our plan selected, the next thing we need to do is get credit card information. This, too, has been split into its own template, however, for different reasons. One of the nice things about Meteor is that we can reuse templates anywhere we'd like. In our application, we'll need a credit card form more than once. Thanks to Spacebars and Meteor, we can do this without a lot of headaches. [Oh happy day](http://youtu.be/6zT8AyfsFmA?t=1m28s). Let's take a peek:
 
+<p class="block-header">/client/views/global/credit-card.html</p>
 ```.lang-markup
 <template name="creditCard">
   <div class="row">
@@ -259,10 +268,10 @@ Pretty straightforward. But there's something to note. Here, we're making use of
 
 The reason _we're_ doing this is that we want to validate our credit card form later, which requires the use of `name` attributes. To prevent this information from "hitting the server" like the quote above suggests, we're preventing the default method used to handle the form in our event map:
 
+<p class="block-header">/client/controllers/public/signup.js</p>
 ```.lang-javascript
 Template.signup.events({
   'submit form': function(e){
-    // Prevent form from submitting.
     e.preventDefault();
   }
 });
@@ -273,6 +282,7 @@ This means that when our signup form is submitted, it will not attempt to pass t
 #### Making it Work
 Okay. So we've got our templates in place and now we need to start interacting with Stripe. Before we do, we want to do one more thing on the client-side: validation. This is important because it ensures that the data we're sending to Stripe and storing in our database is as correct as possible. The last we thing we want is to think we've signed up a bunch of customers when really we just have a bunch of spam accounts being added.
 
+<p class="block-header">/client/controllers/public/signup.js</p>
 ```.lang-javascript
 Template.signup.rendered = function(){
   $('#application-signup').validate({
@@ -337,6 +347,7 @@ Template.signup.rendered = function(){
 
 Woof. That's a nice chunk of code. It's actually quite simple. What we're doing here is passing our `<form id="#application-signup">` element to our `validate()` method (given to us by `themeteorchef:jquery-validation`), and then specifying rules and messages for each of the fields in our form. Note: this is where we're using the `name` attribute from our fields that we mentioned earlier. Paired with each rule is a "message" that can be output to the user if validation fails. Perfect. Once our form is valid, we call to our validation's `submitHandler` function to complete signup.
 
+<p class="block-header">/client/controllers/public/signup.js</p>
 ```.lang-javascript
 var customer = {
   name: $('[name="fullName"]').val(),
@@ -380,6 +391,7 @@ Holy nested functions, Batman! Don't worry. This isn't as complex as it seems. L
 
 Next, we're calling to a server-side method called `createTrialCustomer`. Can you guess what this does? Let's pause on the client and hop to the server to see what this does for us (hint: it's awesome).
 
+<p class="block-header">/server/methods/signup.js</p>
 ```.lang-javascript
 var Future = Npm.require('fibers/future');
 
@@ -408,13 +420,13 @@ Meteor.methods({
 });
 ```
 
-If you've been following with [our other recipes](http://themeteorchef.com/recipes), this should all look familiar. First, we pass our `customer` argument to our good friend [Check](). Once we're certain that what we've received from the client is what we expect, we move onto verify that the email address passed doesn't exist in our database already. Why do we do this?
+If you've been following with [our other recipes](http://themeteorchef.com/recipes), this should all look familiar. First, we pass our `customer` argument to our good friend [Check](http://docs.meteor.com/#/full/check). Once we're certain that what we've received from the client is what we expect, we move onto verify that the email address passed doesn't exist in our database already. Why do we do this?
 
-As you'll see in a little bit, we technically create our customer's Meteor account _after_ we've created their account at Stripe (this will make more sense shortly). Checking the email before we do anything else ensure's that our customer 1.) doesn't already exist in our database, and 2.) that we're not creating duplicate customers in Stripe. An ounce of prevention...or something like that.
+As you'll see in a little bit, we technically create our customer's Meteor account _after_ we've created their account at Stripe (this will make more sense shortly). Checking the email before we do anything else ensures that our customer 1.) doesn't already exist in our database, and 2.) that we're not creating duplicate customers in Stripe. An ounce of prevention...or something like that.
 
 Alright! Next we get into the meat and potatoes of this thing. Once we've verified that we _didn't_ find a user in our database using `if ( !lookupCustomer ) {}` (or, if lookupCustomer returns nothing), we get freaky deaky on some Stripe API calls. Strap in, this might knock you for a loop.
 
-
+<p class="block-header">/server/methods/signup.js</p>
 ```.lang-javascript
 if ( !lookupCustomer ) {
   var newCustomer = new Future();
@@ -452,6 +464,7 @@ In order to create a subscription, we need to create a _customer_ to bind that s
 #### Creating a Customer in Stripe
 Before we do anything else, we need to create a customer. Before we create a customer (having fun yet?), we need to load in our Stripe NPM package from earlier and pass it our API key. What does that look like?
 
+<p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
 var secret = Meteor.settings.private.stripe.testSecretKey;
 var Stripe = Meteor.npmRequire('stripe')(secret);
@@ -466,8 +479,9 @@ After we've got it, we create a variable called `Stripe` and load in our package
 <p>When using the meteorhacks:npm package, we need to modify how we load in NPM packages. Where we <em>would</em> call Npm.require with a package we loaded directly through Meteor, the meteorhacks:npm package creates a sort of alias Meteor.npmRequire for us to use. Keep in mind: if we <em>do not</em> use this alias, meteorhacks:npm won't know about the package and our application will crash. The more you know!</p>
 </div>
 
-Good. So, when loading our Stripe package, notice that we also need to pass our API key via a second pair of parentheses after we load the package: `Meteor.npmRequire('stripe')(secret);`. In a sense, this is like invoking the package as a function as passing our `secret` variable as a parameter. Once this is done, Stripe's API will be accessible. Next, let's look at our method for creating our customer. Finally.
+Good. So, when loading our Stripe package, notice that we also need to pass our API key via a second pair of parentheses after we load the package: `Meteor.npmRequire('stripe')(secret);`. In a sense, this is like invoking the package as a function and passing our `secret` variable as a parameter. Once this is done, Stripe's API will be accessible. Next, let's look at our method for creating our customer. Finally.
 
+<p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
 stripeCreateCustomer: function(card, email){
   // Note: we'd check() both of our arguments here, but I've stripped this out for the sake of brevity.
@@ -488,7 +502,7 @@ stripeCreateCustomer: function(card, email){
   return stripeCustomer.wait();
 }
 ```
-For all the hullabaloo leading up to this point, this is fairly underwhelming. This is a good thing! Lucky for us, Stripe offers official Node.js support (what Meteor is built on top of), so their API is incredibly simplistic. There's two things to pay attention to in here, first, we're creating a `Future()`. What's that?
+For all the hullabaloo leading up to this point, this is fairly underwhelming. This is a good thing! Lucky for us, Stripe offers official Node.js support (what Meteor is built on top of), so their API is incredibly simplistic. There are two things to pay attention to in here, first, we're creating a `Future()`. What's that?
 
 Future's allow us to interact with asynchronus functions a little easier. Without this, if we called to `Stripe.customers.create()` we would get nothing in return. This function isn't blocking, meaning our program will call it and keep going. Instead, we want to _wait_ until Stripe responds to us and do something with that value. A future means we can return a `.wait()` method from our Meteor method that quite literally "waits" until it receives a return value. Notice that in our call to `Stripe.customers.create()` we call on the `.return()` method to "pass" the value we get from Stripe back to our waiting return. Let that soak in a bit. Once you realize what's happening you might freak out.
 
@@ -518,6 +532,7 @@ Make sense? Great! Let's get back to the code.
 
 Now that we have a customer setup in Stripe and our plans defined, we can get a subscription in place so that we can charge our customer on a recurring basis. Let's take a look:
 
+<p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
 stripeCreateSubscription: function(customer, plan){
   // Again, we'd do a check() here. Don't skip it!
@@ -540,6 +555,7 @@ stripeCreateSubscription: function(customer, plan){
 
 Oh, Stripe. You're just...so nice to work with. It's almost like deja vu, right? Almost identical to before, we setup our `Future()` (with a different variable name of course) and return instead our `subscription` object. Hot damn! Alright, reverse inception back up to level two in our `createTrialCustomer` method.
 
+<p class="block-header">/server/methods/signup.js</p>
 ```.lang-javascript
 Meteor.call('stripeCreateSubscription', customerId, plan, function(error, response){
   if (error) {
@@ -551,23 +567,35 @@ Meteor.call('stripeCreateSubscription', customerId, plan, function(error, respon
         password: customer.password,
         profile: {
           name: customer.name,
-          customerId: customerId,
-          subscription: {
-            plan: {
-              name: customer.plan,
-              lists: 0
-            },
-            payment: {
-              card: {
-                type: stripeCustomer.cards.data[0].brand,
-                lastFour: stripeCustomer.cards.data[0].last4
-              },
-              nextPaymentDue: response.current_period_end
-            }
-          }
         }
       });
-      newCustomer.return(user);
+
+      var subscription = {
+        customerId: customerId,
+        subscription: {
+          plan: {
+            name: customer.plan,
+            used: 0
+          },
+          payment: {
+            card: {
+              type: stripeCustomer.cards.data[0].brand,
+              lastFour: stripeCustomer.cards.data[0].last4
+            },
+            nextPaymentDue: response.current_period_end
+          }
+        }
+      }
+
+      Meteor.users.update(user, {
+        $set: subscription
+      }, function(error, response){
+        if (error){
+          console.log(error);
+        } else {
+          newCustomer.return(user);
+        }
+      });
     } catch(exception) {
       newCustomer.return(exception);
     }
@@ -577,13 +605,22 @@ Meteor.call('stripeCreateSubscription', customerId, plan, function(error, respon
 
 Okay, starting to make some sense? With our `stripeCreateSubscription` method complete, we finally create our user in the database. Take note of what's happening here. Because we've made it to this step, we can rest assured that our customer and their subscription exist in Stripe. Here, we take what Stripe has given us and insert it into our own database. This will make it easier to keep track of customers later. To create the account, we use the `emailAddress` and `password` values we pulled from our signup form earlier. But wait a second...what is this `try` and `catch` business?
 
-On the server, Meteor doesn't allow `Accounts.createUser()` to have a callback. This would be fine, but what if calling this produces an error? JavaScript's [`try/catch`](http://eloquentjavascript.net/08_error.html#p_ZBsTKhGA4i) to the rescue! This is sort of like an `if/else` in that it's saying "ok, _try_ this snippet of code and if it throws an error or exception, pass the exception to the _catch_." In the event that `createUser` fails, we can "catch" its exception and return it to the client. Notice just like with our Stripe method's, we're using a Future here to "wait" for a value to send back to the client.
+On the server, Meteor doesn't allow `Accounts.createUser()` to have a callback. This would be fine, but what if calling this produces an error? JavaScript's [`try/catch`](http://eloquentjavascript.net/08_error.html#p_ZBsTKhGA4i) to the rescue! This is sort of like an `if/else` in that it's saying "ok, _try_ this snippet of code and if it throws an error or exception, pass the exception to the _catch_." In the event that `createUser` fails, we can "catch" its exception and return it to the client.
+
+Before we do that, though, we've got something funky going on. Because we want to store our customer's subscription data in a way that _isn't_ immediately visible by calling `Meteor.users.find()` on the client, we need to update our user immediately after they've been created with `Accounts.createUser()`. Why?
+
+Because `Accounts.createUser()` only allows us to specify a `username/email`, `password`, and `profile` object, if we were to set our `subscription` and `customerId` information within this method, it would be ignored.
+
+To get around this, we can set the value of `Accounts.createUser()` to a variable (this is equal to the new user's `userId` once it's available), and then perform an update on that user. In the update, we simply pass the `subscription` object we want to store in the root of the user object in our database. A good bit of work, but handy if we want to obscure our subscription data.
+
+Finally, notice just like with our Stripe methods, we're using a Future here to "wait" for a value to send back to the client.
 
 Once we have that value (if our method succeeds, this value is arbitrary, if it fails, this value will contain an error to display on the client), we can return to the client. [Zwoop! Back up another level](http://youtu.be/cMkmGb1W-9s?t=1m1s).
 
 #### Returning to the Client
 Okay, so we're all setup with Stripe, our user exists in the database...now what? Now, we must bow down to the User Experience Gods and complete our signup flow. Let's see how we do it.
 
+<p class="block-header">/client/controllers/public/signup.js</p>
 ```.lang-javascript
 Meteor.call('createTrialCustomer', customer, function(error, response){
   if (error) {
@@ -608,7 +645,7 @@ Meteor.call('createTrialCustomer', customer, function(error, response){
 });
 ```
 
-Okay, so. There's a few tricks going on here to tie up all of our loose ends. The first is that we're watching for an `error` on our method, and if one occurs, alerting the given reason for the error _and_ (ready for this???), resetting the state of our submit button from earlier. Note: this doesn't reset our entire form, but rather, makes it possible to "click" submit again. Woo doggie.
+Okay, so. There are a few tricks going on here to tie up all of our loose ends. The first is that we're watching for an `error` on our method, and if one occurs, alerting the given reason for the error _and_ (ready for this???), resetting the state of our submit button from earlier. Note: this doesn't reset our entire form, but rather, makes it possible to "click" submit again. Woo doggie.
 
 After this, in our `else`, we're looking for _another_ error. [What, what, what](https://www.youtube.com/watch?v=_3PUu88nOcw)? Recall that on the server, we were using a `Future` to "wait" on Stripe for a response. Because of this, in the event that our method throws an error on the server, we return it to the client, _but_ it comes through in the response argument. Because of this, for added precaution we want to ensure that an error object _is not_ defined on the response. If it is, we do our hot little button reset trick. If not...
 
@@ -617,8 +654,8 @@ Time to login our user! This is actually pretty cool. Because we technically alr
 Finally, in the callback of `loginWithPassword`, we test for an error _one more time_ and if all is well, redirect the user to the `/lists` view where they can see their current todo lists. We also reset the button again for good measure. Woah! Our signup flow is complete. At this point, we've succesfully signed our user up for an account with a trial on Stripe. [High fives all around](http://media2.giphy.com/media/DohrJX1h2W5RC/giphy.gif)!
 
 <div class="note">
-<h3>A quick note</h3>
-<p>Alright, you know what time it is. Let's take a break and do a little exercise before we keep going. <a href="http://youtu.be/Y6leITt0gJ8?t=7m">1 and 2 and 3 and...</a></p>
+  <h3>A quick note</h3>
+  <p>Alright, you know what time it is. Let's take a break and do a little exercise before we keep going. <a href="http://youtu.be/Y6leITt0gJ8?t=7m">1 and 2 and 3 and...</a></p>
 </div>
 
 ### Managing Usage
@@ -627,6 +664,7 @@ In our SaaS app, we're offerring todo lists to customers in different tiers (thi
 ##### Using Template Helpers to Block Visibility
 Because we have the power of reactivity with Meteor, we can do some really cool stuff using Spacebars templates. In our case, we can wrap the parts of our interface that we want to display _conditionally_. For example, if a user has a "Small" plan and they've used up 5 of their 5 available lists, we want to _hide_ the UI that allows them to add more.
 
+<p class="block-header">/client/views/authenticated/todo-lists.html</p>
 ```.lang-javascript
 <template name="todoLists">
   <div style="margin-top: 0px;" class="page-header clearfix">
@@ -641,9 +679,9 @@ Because we have the power of reactivity with Meteor, we can do some really cool 
   [...]
 </template>
 ```
-See what's going on here? We've setup a helper `{{listsAvailable}}` that allows to check whether our current user has lists available on their plan or not. Here, we start by wrapping our "New Todo List" button in an `{{#if listsAvailable}}` helper. This means that _if_ our helper returns true, or, the user has lists available: we'll show them the "New Todo List" button. If not, poof! Cool, right?
+See what's going on here? We've setup a helper `{{listsAvailable}}` that allows us to check whether our current user has lists available on their plan or not. Here, we start by wrapping our "New Todo List" button in an `{{#if listsAvailable}}` helper. This means that _if_ our helper returns true, or, the user has lists available: we'll show them the "New Todo List" button. If not, poof! Cool, right?
 
-Next, we do the inverse of this by making use of Spacebar's (actually, Handlebars) `{{#unless}}` helper, again passing `listsAvailable` as our value to test against. Here, if `listsAvailable` returns `true`, we display a "heads up" message that suggests the [user should upgrade](https://www.youtube.com/watch?v=aocZo3oeNxw).
+Next, we do the inverse of this by making use of Spacebar's (actually, Handlebars) `{{#unless}}` helper, again passing `listsAvailable` as our value to test against. Here, if `listsAvailable` returns `false`, we display a "heads up" message that suggests the [user should upgrade](https://www.youtube.com/watch?v=aocZo3oeNxw).
 
 Okay! This makes sense... sort of. How does it _actually work_, though?
 
@@ -651,6 +689,7 @@ Okay! This makes sense... sort of. How does it _actually work_, though?
 
 We've got two things going on here, but let's start with `listsAvailable`. We're using some sneaky behavior here to prevent making the user's plan data available to the client.
 
+<p class="block-header">/client/controllers/authenticated/todo-lists.js</p>
 ```.lang-javascript
 Template.todoLists.helpers({
   listsAvailable: function(){
@@ -671,8 +710,10 @@ Template.todoLists.helpers({
   [...]
 });
 ```
+
 So where we might do a `Meteor.users.find()` here, we're instead delegating all of this to the client through a method called `checkUserQuota`. Here, we get our user's ID and when it's available, call to the method on the server. Before we explain how we get the data out to the template, let's hop over to the server and look at the `checkUserQuota` method.
 
+<p class="block-header">/server/methods/data/read/users.js</p>
 ```.lang-javascript
 Meteor.methods({
   checkUserQuota: function(user){
@@ -697,12 +738,13 @@ Meteor.methods({
 });
 ```
 
-This one is interesting. We want our method to do two things: get the current user's subscription information (specifically, we want the user's plan data) and then we want to get our global plan data from `settings.json`. The goal here is to see whether or not the user's `subscription.plan.used` value is less than the gobal limit for their plan type. If it is, we return `true`, it it's not, we return `false`. Why do this here?
+This one is interesting. We want our method to do two things: get the current user's subscription information (specifically, we want the user's plan data) and then we want to get our global plan data from `settings.json`. The goal here is to see whether or not the user's `subscription.plan.used` value is less than the gobal limit for their plan type. If it is, we return `true`, if it's not, we return `false`. Why do this here?
 
 The reason we do this here is that it avoids having to expose the user's subscription information on the client. Our server has access to all of a user's data, which means we can have it do the messy checking work without mucking up our client-side controller. This is one of those stylistic things that, while not _entirely_ necessary, helps to keep your code a little bit cleaner.
 
 There's one thing above that may not be entirely clear. Above we're making use of the `_.find()` method given to us by the `underscore` package. This function is really handy. First, we pass our `availablePlans` array which is equal to the list of plans we've defined in our `settings.json` file. Next, for each plan, we compare the plan's `name` field to our user's `plan.name` field. This essentialy "plucks" the plan that our user is signed up for out of the array and sets it euqal to our `currentPlan` variable. Cool, right?
 
+<p class="block-header">/client/controllers/authenticated/todo-lists.js</p>
 ```.lang-javascript
 Meteor.call('checkUserQuota', user, function(error, response){
   if (error) {
@@ -714,11 +756,80 @@ Meteor.call('checkUserQuota', user, function(error, response){
 ```
 Back on the client, we take the returned `true` or `false` value and set it equal to a `Session` variable that's unique to our current user. The reason we're doing this here is that if we were simply to return our value from our method, our helper wouldn't be able to "see" it. Doing this ensures that the value is made accessible to the helper when it's ready. Neat! Outside of our method call, we simply return a variable `available` from our helper that's assigned to `Session.get('userListsAvailable_' + user)`.
 
-It should be obvious now, but as we're simply returning `true` or `false`, this will correctly toggle our template helper's, revealing the proper UI depending on the user's account status. [Woah](http://media.giphy.com/media/nVkpHJrIwcI8/giphy.gif).
+It should be obvious now, but as we're simply returning `true` or `false`, this will correctly toggle our template helpers, revealing the proper UI depending on the user's account status. [Woah](http://media.giphy.com/media/nVkpHJrIwcI8/giphy.gif).
+
+##### Controlling the Quota
+So we have a way for checking the quota in place, but how do we actually _control_ that quota? Notice that in our `/lists` view, you have the ability to create new lists. Additionally, if you click into an individual list, you have the ability to delete a list. What do these do?
+
+This is how we determine quota. Each of these buttons (in addition to adding or deleting a list) also call to a server method to _increment_ or _decrement_ the current user's number of "used" lists. Let's take a look at the `insert` method to see what this looks like in practice.
+
+<p class="block-header">/server/methods/data/insert/todo-lists.js</p>
+```.lang-javascript
+var newList = TodoLists.insert(list, function(error){
+  if (error) {
+    console.log(error);
+  } else {
+    var getUser = Meteor.users.findOne({"_id": user}, {fields: {"subscription.plan.used": 1}});
+    if (getUser) {
+      var newQuota = ++getUser.subscription.plan.used;
+      var update   = {auth: SERVER_AUTH_TOKEN, user: user, quota: newQuota};
+      Meteor.call('updateUserQuota', update, function(error){
+        if(error){
+          console.log(error);
+        }
+      });
+    }
+  }
+});
+```
+
+This should look somewhat familiar. Here, we're managing the quota in the _callback_ of our `TodoLists.insert` method. First, we start by getting the current user, passing a projection to our `findOne` to specify that we only need the `used` key of the `subscription.plan` object. Next, once we have our user, we set a variable `newQuota` equal to the the current number of used lists _plus one_ (the `++` prepended to our key simply means "increment by one").
+
+But then we introduce something interesting. In the object we're defining to update the user with, we have something called `SERVER_AUTH_TOKEN`. What the heck is that?
+
+This is something that was discovered while implementing this feature. Because the method we're trying to call to `updateUserQuota` is potentially destructive (i.e. a user could add or remove lists from their plan in the console), I wanted to find a way to _block_ this behavior. The solution I came up with is to create some sort of identifier that's only available on the server, but accessible to all of our server-side methods.
+
+Enter: `SERVER_AUTH_TOKEN`. Over in our `/server/admin/startup.js` file, we've defined `SERVER_AUTH_TOKEN` as a global variable that's equal to a call to `Random.secret()`. Here, we're making use of the `random` package we installed earlier and calling on its `.secret()` method. What this gets us is a completely random, 43 character string whenever our server boots up. This means that the string cannot be guessed and therefore, something we can trust is only accessible on the server.
+
+<p class="block-header">/server/methods/data/update/users.js</p>
+```.lang-javascript
+  updateUserQuota: function(update){
+    check(update, {auth: String, user: String, quota: Number});
+
+    if ( update.auth == SERVER_AUTH_TOKEN ){
+      Meteor.users.update(update.user, {
+        $set: {
+          "subscription.plan.used": update.quota
+        }
+      }, function(error){
+        if (error) {
+          console.log(error);
+        }
+      });
+    } else {
+      throw new Meteor.Error('invalid-auth-token', 'Sorry, your server authentication token is invalid.');
+    }
+  }
+});
+```
+
+Usage of the token is pretty straightforward. Above, we can see the `updateUserQuota` method that we're calling and passing our `SERVER_AUTH_TOKEN` to. After `check()`ing our argument for validity, we simply do an `if` statement to see if the `auth` value passed to our method is equal to our global `SERVER_AUTH_TOKEN`. If they _are_ equal, we allow the update on the user, _incrementing_ or _decrementing_ their `used` lists value. If they are not equal, we simply throw an error that can be returned on the client (e.g. if a user tried to call this method from their browser's console, they'd see our error displayed there).
+
+##### A wee bit of controversy
+
+The above pattern using `SERVER_AUTH_TOKEN` is a bit controversial. Before this recipe was released, I [published this pattern on GitHub](https://github.com/themeteorchef/server-only-methods) and shared it with the Meteor community. A few people suggested that using the `SERVER_AUTH_TOKEN` part was unnecessary, as you can actually check the value of `this.connection` to see if it equals `undefined` (it does when a request originates from the server). In testing, I found that this _does_ work, but **only** if the request starts on the server (e.g. you have an automated script on the server to call the method).
+
+If the request in any way originates from the client, `this.connection` still returns a value (e.g. in the above example, our request originates on the client, but our `updateUserQuota` function is actually triggered from the server from within another method). This means that in our use case above, we need an alternative to `this.connection`. A bit confusing, but something to keep in mind if you want to make use of server-only methods. Make sure to [look at the history for the snippet](https://github.com/themeteorchef/server-only-methods/commits/master) I prepared over on GitHub to get a better understanding.
+
+<div class="note">
+<h3>A quick note</h3>
+<p>The above example showcases incrementing or adding lists and how they impact the quota, however, for the sake of brevity I've left out decrementing or removing lists. The patterns are nearly identical, save for the result they produce. To see the "remove" version of this, check out `/server/methods/data/remove/todo-lists.js`.</p>
+</div>
 
 ##### Displaying the User's Plan
 There's one more thing we need to call attention to before we move on. Notice that back in our `todoLists` template, when the user _does not_ have lists available, we display an alert message that lets the user know their current plan. Where the heck is that coming from?
 
+<p class="block-header">/client/helpers/helpers-ui.js</p>
 ```.lang-javascript
 UI.registerHelper('plan', function(){
   var user = Meteor.userId(),
@@ -740,6 +851,7 @@ Because we're making reference to the user's plan data in multiple spots within 
 
 Here, we've setup `{{plan}}` to be a helper that's accessible anywhere in our app. Notice that we use the same `Session` variable trick from the `listsAvailable` helper in our `todoLists` template. What exactly is `plan` returning, though?
 
+<p class="block-header">/server/methods/data/read/users.js</p>
 ```.lang-javascript
 checkUserPlan: function(user){
   check(user, String);
@@ -769,6 +881,7 @@ This is very similar to our `checkUserQuota` method, but instead of determining 
 
 Next, we create a new object `planData` to return to the client that includes the information we want accessible to our helper. As a little UX touch, we use a ternary operator to check the limit on the plan and append a string corresponding to the plan's plurarlity. So, for example, if our user's limit is one, we get the correct contextual `1 list` string, or if they have 5, we get `5 lists`. Go ahead, [flex](http://youtu.be/rec_7Si0MEA?t=1m4s), that's pretty boss.
 
+<p class="block-header">/client/views/authenticated/todo-lists.html</p>
 ```.lang-javascript
 <p class="alert alert-warning">Heads up! You've hit your list limit for your current plan (<strong>{{capitalize plan.subscription.plan.name}} - {{plan.limit}}</strong>). <a href="#">Upgrade Now</a></p>
 ```
@@ -784,6 +897,7 @@ Note that now on the client, we can access our plan information via the `{{plan}
 
 Home stretch! There's just one more thing that we need to do before we leave the rest to part two. Over in our user's `/billing` view (specifically our `billingOverview` template), we want to display their plan information so they can see the status of their account and decide whether or not to upgrade/downgrade.
 
+<p class="block-header">/client/views/authenticated/billing/_billing-overview.html</p>
 ```.lang-markup
 <template name="billingOverview">
   <div class="panel panel-default billing-module">
@@ -818,6 +932,7 @@ Home stretch! There's just one more thing that we need to do before we leave the
 ```
 A few things to pay attention to. First, we display the user's current plan information (number of lists used of those available) by accessing our `{{plan}}` template helper from earlier. This is straight forward: we're just outputting the values to the page. But just beneath that...wait, woah, what is that? A usage bar!
 
+<p class="block-header">/client/views/authenticated/billing/_billing-overview.html</p>
 ```.lang-markup
 <div class="usage-bar">
   <div class="used" style="width:{{percentage plan.subscription.plan.used plan.limit}};"></div>
@@ -828,6 +943,7 @@ Making use of our `{{plan}}` helper and a dash of CSS-fu, we can display the use
 
 Last but not least, just beneath this block we display our user's payment information...
 
+<p class="block-header">/client/views/authenticated/billing/_billing-overview.html</p>
 ```.lang-markup
 <div class="bm-block-content">
   <span><strong>{{plan.subscription.payment.card.type}}</strong> &mdash; {{plan.subscription.payment.card.lastFour}}</span>
@@ -843,7 +959,7 @@ We did it! Well, at least part of it. This concludes part 1 of 2. It was a lot o
 ![Zack and Slater patting themselves on the back](http://media.giphy.com/media/9Q249Qsl5cfLi/giphy.gif)
 
 ### Wrap Up & Summary
-Very cool stuff. In this recipe we learned how to sign users up for our app, create a customer with a subscription on Stripe, and show our customer's their plan information. We also learned how to trigger state in our app to encourage user's to upgrade if and when they hit their current plan's limits. Wild stuff.
+Very cool stuff. In this recipe we learned how to sign users up for our app, create a customer with a subscription on Stripe, and show our customer's their plan information. We also learned how to trigger state in our app to encourage customer's to upgrade if and when they hit their current plan's limits, and how to determine when to display that state by managing the customer's quota. Wild stuff.
 
 #### In part two...
 We'll take a look at helping our customer update their plan information, cancel their subscription (nooo!), manage their credit card, and send invoices when our plan renews! Get excited. When we're done, we'll have a full-blown payments system using Stripe.
