@@ -39,14 +39,14 @@
       }
     ],
     "stripe": {
-      "testPublishableKey": "pk_test_AMhK4ZU4jyJv0VOjRKRf4BVm",
-      "livePublishableKey": "pk_live_ZOYwX3CgWXjdS0mibY7KOLoa"
+      "testPublishableKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "livePublishableKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     }
   },
   "private": {
     "stripe": {
-      "testSecretKey": "sk_test_rXfvY6pN0cKBXrHacPXxGnJS",
-      "liveSecretKey": "sk_live_zdaD0ZvUQsutJrgmddI9mlLm"
+      "testSecretKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "liveSecretKey": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     }
   }
 }
