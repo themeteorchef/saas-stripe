@@ -118,5 +118,113 @@ Meteor.methods({
     });
 
     return stripeSubscription.wait();
+  },
+
+  stripeUpdateSubscription: function(customer, subscription, plan){
+    // Check our arguments against their expected patterns. This is especially
+    // important here because we're dealing with sensitive customer information.
+    check(customer, String);
+    check(subscription, String);
+    check(plan, String);
+
+    // Because Stripe's API is asynchronous (meaning it doesn't block our function
+    // from running once it's started), we need to make use of the Fibers/Future
+    // library. This allows us to create a return object that "waits" for us to
+    // return a value to it.
+    var stripeUpdateSubscription = new Future();
+
+    // If all is well, call to the Stripe API to update our subscription! Note:
+    // here we have to pass *both* the ID of the customer and the ID of their
+    // subscription in order for this to work.
+    Stripe.customers.updateSubscription(customer, subscription, {
+      plan: plan
+    }, function(error, subscription){
+      if (error) {
+        stripeUpdateSubscription.return(error);
+      } else {
+        stripeUpdateSubscription.return(subscription);
+      }
+    });
+
+    return stripeUpdateSubscription.wait();
+  },
+
+  stripeRetrieveCustomer: function(customer){
+    // Check our arguments against their expected patterns. This is especially
+    // important here because we're dealing with sensitive customer information.
+    check(customer, String);
+
+    // Because Stripe's API is asynchronous (meaning it doesn't block our function
+    // from running once it's started), we need to make use of the Fibers/Future
+    // library. This allows us to create a return object that "waits" for us to
+    // return a value to it.
+    var stripeRetrieveCustomer = new Future();
+
+    // If all is well, call to the Stripe API to update our subscription! Note:
+    // here we have to pass *both* the ID of the customer and the ID of their
+    // subscription in order for this to work.
+    Stripe.customers.retrieve(customer, function(error, customer){
+      if (error) {
+        stripeRetrieveCustomer.return(error);
+      } else {
+        stripeRetrieveCustomer.return(customer);
+      }
+    });
+
+    return stripeRetrieveCustomer.wait();
+  },
+
+  stripeUpdateCard: function(customer, card, updates){
+    // Check our arguments against their expected patterns. This is especially
+    // important here because we're dealing with sensitive customer information.
+    check(customer, String);
+    check(card, String);
+    check(updates, Object);
+
+    // Because Stripe's API is asynchronous (meaning it doesn't block our function
+    // from running once it's started), we need to make use of the Fibers/Future
+    // library. This allows us to create a return object that "waits" for us to
+    // return a value to it.
+    var stripeUpdateCard = new Future();
+
+    // If all is well, call to the Stripe API to update our card!
+    Stripe.customers.updateCard(customer, card, updates, function(error, customer){
+      if (error) {
+        stripeUpdateCard.return(error);
+      } else {
+        stripeUpdateCard.return(customer);
+      }
+    });
+
+    return stripeUpdateCard.wait();
+  },
+
+  stripeCreateCard: function(customer, cardToken){
+    // Check our arguments against their expected patterns. This is especially
+    // important here because we're dealing with sensitive customer information.
+    check(customer, String);
+    check(cardToken, String);
+
+    // Because Stripe's API is asynchronous (meaning it doesn't block our function
+    // from running once it's started), we need to make use of the Fibers/Future
+    // library. This allows us to create a return object that "waits" for us to
+    // return a value to it.
+    var stripeCreateCard = new Future();
+
+    // If all is well, call to the Stripe API to create our new card on our customer!
+    // Note: our stripeCreateCard method is not the same as creating a token. The difference
+    // here is that this creates a card _on our customer_ not the card token itself. To
+    // get our token, we'd call to our stripeCreateToken method.
+    Stripe.customers.createCard(customer, {
+      card: cardToken
+    }, function(error, customer){
+      if (error) {
+        stripeCreateCard.return(error);
+      } else {
+        stripeCreateCard.return(customer);
+      }
+    });
+
+    return stripeCreateCard.wait();
   }
 });
