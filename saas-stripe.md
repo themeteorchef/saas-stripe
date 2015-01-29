@@ -754,7 +754,7 @@ This one is interesting. We want our method to do two things: get the current us
 
 The reason we do this here is that it avoids having to expose the user's subscription information on the client. Our server has access to all of a user's data, which means we can have it do the messy checking work without mucking up our client-side controller. This is one of those stylistic things that, while not _entirely_ necessary, helps to keep your code a little bit cleaner.
 
-There's one thing above that may not be clear. Above we're making use of the `_.find()` method given to us by the `underscore` package. This function is really handy. First, we pass our `availablePlans` array which is equal to the list of plans we've defined in our `settings.json` file. Next, for each plan, we compare the plan's `name` field to our user's `plan.name` field. This essentialy "plucks" the plan that our user is signed up for out of the array and sets it euqal to our `currentPlan` variable. Cool, right?
+There's one thing above that may not be clear. Above we're making use of the `_.find()` method given to us by the `[underscore](http://docs.meteor.com/#/full/underscore)` package. This function is really handy. First, we pass our `availablePlans` array which is equal to the list of plans we've defined in our `settings.json` file. Next, for each plan, we compare the plan's `name` field to our user's `plan.name` field. This essentialy "plucks" the plan that our user is signed up for out of the array and sets it euqal to our `currentPlan` variable. Cool, right?
 
 <p class="block-header">/client/controllers/authenticated/todo-lists.js</p>
 ```.lang-javascript
