@@ -528,7 +528,7 @@ Here, we've already defined our plans. We want our plans to be identical to what
 
 This will give you access to the "Create a new plan" modal. This should mostly be straightforward. Of note, make sure that the `ID` field here is identical to the `name` field of the plan in `settings.json`. More specifically, this should be a lowercase version of the plan name. Think of it this way: the `ID` field in this modal is what the computer uses to identify your plan and the `Name` field is what you use to identify the plan.
 
-Aside from this, the only other thing to pay attention to is the `Trial period days` field. This does exactly what you might think: determines how many days _before_ Stripe will process a charge on the card. In the case of our application, we'll set it to one day for demonstration purposes. In your own application, you'll probably want to try a more standard 15, 30, or 60 day trial.
+Aside from this, the only other thing to pay attention to is the "Trial period days" field. This does exactly what you might think: determines how many days _before_ Stripe will process a charge on the card. In the case of our application, we'll set it to one day for demonstration purposes. In your own application, you'll probably want to try a more standard 15, 30, or 60 day trial.
 
 Make sense? Great! Let's get back to the code.
 
@@ -772,7 +772,8 @@ It should be obvious now, but as we're simply returning `true` or `false`, this 
 
 ##### Controlling the Quota
 
-So we have a way for checking the quota in place, but how do we actually _control_ that quota? Notice that in our `/lists` view, you have the ability to create new lists. Additionally, if you click into an individual list, you have the ability to delete a list. What do these do?
+So we have a way for checking the quota in place, but how do we actually _control_ that quota? Notice that in our `/lists` page, you have the ability to create new lists. Additionally, if you click into an individual list, you have the ability to delete a list. What do these do?
+
 
 This is how we determine quota. Each of these buttons (in addition to adding or deleting a list) also call to a server method to _increment_ or _decrement_ the current user's number of "used" lists. Let's take a look at the `insert` method to see what this looks like in practice.
 
@@ -910,7 +911,7 @@ Note that now on the client, we can access our plan information via the `{{plan}
 
 #### Displaying the User's Plan on the Billing Screen
 
-Home stretch! There's just one more thing that we need to do before we leave the rest to part two. Over in our user's `/billing` view (specifically our `billingOverview` template), we want to display their plan information so they can see the status of their account and decide whether or not to upgrade/downgrade.
+Home stretch! There's just one more thing that we need to do before we leave the rest to part two. Over in our user's `/billing` page (specifically our `billingOverview` template), we want to display their plan information so they can see the status of their account and decide whether or not to upgrade/downgrade.
 
 <p class="block-header">/client/views/authenticated/billing/_billing-overview.html</p>
 ```.lang-markup
