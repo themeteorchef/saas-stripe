@@ -154,7 +154,7 @@ Meteor.methods({
         // to manage plan's, so, we run our user update method here to keep things simple.
         // First we create our update object (don't forget SERVER_AUTH_TOKEN)...
         // Note: we're using a Fiber() here because we're calling to Meteor code from
-        // within another function (this will cause Meteor to throw an error).
+        // within async function's callback (this will cause Meteor to throw an error).
         Fiber(function(){
           var update = {
             auth: SERVER_AUTH_TOKEN,
