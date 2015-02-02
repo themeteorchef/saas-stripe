@@ -15,9 +15,13 @@
               <button type="button" disabled="disabled" class="btn btn-success pull-right">Current Plan</button>
             {{else}}
               {{#if upgradeAvailable amount.cents}}
-                <button type="button" class="btn btn-default pull-right">Upgrade</button>
+                <button type="button" data-loading-text="Upgrading..." class="btn btn-default pull-right downgrade-upgrade">Upgrade</button>
               {{else}}
-                <button type="button" class="btn btn-default pull-right">Downgrade</button>
+                {{#if downgradeAvailable limit}}
+                  <button type="button" data-loading-text="Downgrading..." class="btn btn-default pull-right downgrade-upgrade">Downgrade</button>
+                {{else}}
+                  <button type="button" disabled="disabled" class="btn btn-default pull-right downgrade-unavailable">Downgrade Unavailable</button>
+                {{/if}}
               {{/if}}
             {{/if}}
           </li>

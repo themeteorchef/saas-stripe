@@ -17,6 +17,7 @@
 var secret = Meteor.settings.private.stripe.testSecretKey;
 var Stripe = Meteor.npmRequire('stripe')(secret);
 var Future = Npm.require('fibers/future');
+var Fiber  = Npm.require('fibers');
 
 Meteor.methods({
 
@@ -120,29 +121,55 @@ Meteor.methods({
     return stripeSubscription.wait();
   },
 
-  stripeUpdateSubscription: function(customer, subscription, plan){
+  stripeUpdateSubscription: function(plan){
     // Check our arguments against their expected patterns. This is especially
     // important here because we're dealing with sensitive customer information.
-    check(customer, String);
-    check(subscription, String);
     check(plan, String);
 
     // Because Stripe's API is asynchronous (meaning it doesn't block our function
     // from running once it's started), we need to make use of the Fibers/Future
     // library. This allows us to create a return object that "waits" for us to
-    // return a value to it.
+    // return a value to it. Yes, we could use Meteor.wrapAsync to simplify our code
+    // a bit, but I've choosen to demonstrate this here so we can better see *how*
+    // the function is responding. Put down that pitchfork.
     var stripeUpdateSubscription = new Future();
+
+    // Before we jump into everything, we need to get our customer's ID. Recall
+    // that we can't send this over from the client because we're *not* publishing
+    // it to the client. Instead, here, we take the current userId from Meteor
+    // and lookup our customerId.
+    var user    = Meteor.userId();
+    var getUser = Meteor.users.findOne({"_id": user}, {fields: {"customerId": 1}});
 
     // If all is well, call to the Stripe API to update our subscription! Note:
     // here we have to pass *both* the ID of the customer and the ID of their
     // subscription in order for this to work.
-    Stripe.customers.updateSubscription(customer, subscription, {
+    Stripe.customers.updateSubscription(getUser.customerId, {
       plan: plan
     }, function(error, subscription){
       if (error) {
         stripeUpdateSubscription.return(error);
       } else {
-        stripeUpdateSubscription.return(subscription);
+        // Here, we know that updating our user's subscription will *only* be used
+        // to manage plan's, so, we run our user update method here to keep things simple.
+        // First we create our update object (don't forget SERVER_AUTH_TOKEN)...
+        // Note: we're using a Fiber() here because we're calling to Meteor code from
+        // within another function (this will cause Meteor to throw an error).
+        Fiber(function(){
+          var update = {
+            auth: SERVER_AUTH_TOKEN,
+            user: user,
+            plan: plan
+          }
+          // And then we pass our update over to our updateUserPlan method.
+          Meteor.call('updateUserPlan', update, function(error, response){
+            if (error){
+              console.log(error);
+            } else {
+              stripeUpdateSubscription.return(response);
+            }
+          });
+        }).run();
       }
     });
 
