@@ -187,9 +187,7 @@ Meteor.methods({
     // return a value to it.
     var stripeRetrieveCustomer = new Future();
 
-    // If all is well, call to the Stripe API to update our subscription! Note:
-    // here we have to pass *both* the ID of the customer and the ID of their
-    // subscription in order for this to work.
+    // If all is well, call to the Stripe API to retrieve our customer!
     Stripe.customers.retrieve(customer, function(error, customer){
       if (error) {
         stripeRetrieveCustomer.return(error);

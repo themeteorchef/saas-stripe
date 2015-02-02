@@ -17,6 +17,7 @@ Router.route('signup', {
   template: 'signup',
   onBeforeAction: function(){
     Session.set('currentRoute', 'signup');
+    Session.set('addingNewCreditCard', true);
     this.next();
   }
 });

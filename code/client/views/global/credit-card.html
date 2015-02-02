@@ -1,10 +1,16 @@
 <template name="creditCard">
   <div class="row">
     <div class="col-xs-12">
-      <!-- Do an {{#if currentUser.profile.billing.card}} -->
       <div class="form-group">
         <label class="text-success"><i class="fa fa-lock"></i> Card Number (Totes Secure, Like a Bank)</label>
-        <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+        {{#if addNewCard}}
+          <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+        {{else}}
+          {{#if plan.subscription.payment.card}}
+            <p class="alert alert-info">Card on File: <strong>{{plan.subscription.payment.card.type}}</strong> &mdash; {{plan.subscription.payment.card.lastFour}}</p>
+            <p><a class="add-new-card" href="#">Add a New Card</a></p>
+          {{/if}}
+        {{/if}}
       </div>
     </div>
   </div> <!-- end .row -->

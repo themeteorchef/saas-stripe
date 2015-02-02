@@ -59,6 +59,7 @@ Router.route('billingCard', {
   template: 'billingCard',
   onBeforeAction: function(){
     Session.set('currentRoute', 'billing');
+    Session.set('addingNewCreditCard', false);
     this.next();
   }
 });
