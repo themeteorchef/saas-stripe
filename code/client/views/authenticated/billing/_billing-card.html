@@ -3,22 +3,24 @@
     <div class="panel-heading">
       <h3 class="panel-title"><a href="{{pathFor 'billing'}}" class="text-muted">Billing</a> / Card</h3>
     </div>
-    <div class="panel-body">
-      <div class="card">
-        <div class="row">
-          <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
-            {{>creditCard}}
+    <form id="billing-card">
+      <div class="panel-body">
+        <div class="card">
+          <div class="row">
+            <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
+              {{> Template.dynamic template="creditCard" data="billing"}}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="panel-footer">
-      <div class="row">
-        <div class="col-xs-12">
-          <button type="submit" class="btn btn-success">Update Card</button>
-          <a href="{{pathFor 'billing'}}" class="btn btn-default">Cancel</a>
+      <div class="panel-footer">
+        <div class="row">
+          <div class="col-xs-12">
+            <button type="submit" class="btn btn-success update-card" data-loading-text="Updating...">Update Card</button>
+            <a href="{{pathFor 'billing'}}" class="btn btn-default">Cancel</a>
+          </div>
         </div>
       </div>
-    </div>
+    </form>
   </div>
 </template>

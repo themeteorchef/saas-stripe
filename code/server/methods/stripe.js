@@ -199,12 +199,13 @@ Meteor.methods({
     return stripeRetrieveCustomer.wait();
   },
 
-  stripeUpdateCard: function(customer, card, updates){
+  stripeUpdateCard: function(updates){
     // Check our arguments against their expected patterns. This is especially
     // important here because we're dealing with sensitive customer information.
-    check(customer, String);
-    check(card, String);
-    check(updates, Object);
+    check(updates, {
+      exp_month: String,
+      exp_year: String
+    });
 
     // Because Stripe's API is asynchronous (meaning it doesn't block our function
     // from running once it's started), we need to make use of the Fibers/Future
@@ -212,44 +213,91 @@ Meteor.methods({
     // return a value to it.
     var stripeUpdateCard = new Future();
 
-    // If all is well, call to the Stripe API to update our card!
-    Stripe.customers.updateCard(customer, card, updates, function(error, customer){
-      if (error) {
+    // Before we jump into everything, we need to get our customer's ID. Recall
+    // that we can't send this over from the client because we're *not* publishing
+    // it to the client. Instead, here, we take the current userId from Meteor
+    // and lookup our customerId.
+    var user    = Meteor.userId();
+    var getUser = Meteor.users.findOne({"_id": user}, {fields: {"customerId": 1}});
+
+    // Because we're not storing our user's card ID, we need to call Stripe first to
+    // retrieve that information before we perform the update. This is key, because
+    // without it, Stripe won't know which card to update. Once we have this info,
+    // we call to Stripe *again* to update our customer's profile.
+    Meteor.call('stripeRetrieveCustomer', getUser.customerId, function(error, response){
+      if (error){
         stripeUpdateCard.return(error);
       } else {
-        stripeUpdateCard.return(customer);
+        var card = response.cards.data[0].id;
+        // If all is well, call to the Stripe API to update our card!
+        Stripe.customers.updateCard(getUser.customerId, card, updates, function(error, customer){
+          if (error) {
+            stripeUpdateCard.return(error);
+          } else {
+            stripeUpdateCard.return(customer);
+          }
+        });
       }
     });
 
     return stripeUpdateCard.wait();
   },
 
-  stripeCreateCard: function(customer, cardToken){
+  stripeSwapCard: function(card){
     // Check our arguments against their expected patterns. This is especially
     // important here because we're dealing with sensitive customer information.
-    check(customer, String);
-    check(cardToken, String);
+    check(card, {
+      number: String,
+      exp_month: String,
+      exp_year: String,
+      cvc: String
+    });
 
     // Because Stripe's API is asynchronous (meaning it doesn't block our function
     // from running once it's started), we need to make use of the Fibers/Future
     // library. This allows us to create a return object that "waits" for us to
     // return a value to it.
-    var stripeCreateCard = new Future();
+    var stripeSwapCard = new Future();
+
+    // Before we jump into everything, we need to get our customer's ID. Recall
+    // that we can't send this over from the client because we're *not* publishing
+    // it to the client. Instead, here, we take the current userId from Meteor
+    // and lookup our customerId.
+    var user    = Meteor.userId();
+    var getUser = Meteor.users.findOne({"_id": user}, {fields: {"customerId": 1}});
 
     // If all is well, call to the Stripe API to create our new card on our customer!
     // Note: our stripeCreateCard method is not the same as creating a token. The difference
     // here is that this creates a card _on our customer_ not the card token itself. To
-    // get our token, we'd call to our stripeCreateToken method.
-    Stripe.customers.createCard(customer, {
-      card: cardToken
+    // get our token, we'd call to our stripeCreateToken method (defined as an example above).
+    Stripe.customers.update(getUser.customerId, {
+      card: card
     }, function(error, customer){
       if (error) {
-        stripeCreateCard.return(error);
+        stripeSwapCard.return(error);
       } else {
-        stripeCreateCard.return(customer);
+        var card = {
+          lastFour: customer.cards.data[0].last4,
+          type: customer.cards.data[0].brand
+        }
+        Fiber(function(){
+          var update = {
+            auth: SERVER_AUTH_TOKEN,
+            user: user,
+            card: card
+          }
+          // And then we pass our update over to our updateUserPlan method.
+          Meteor.call('updateUserCard', update, function(error, response){
+            if (error){
+              console.log(error);
+            } else {
+              stripeSwapCard.return(response);
+            }
+          });
+        }).run();
       }
     });
 
-    return stripeCreateCard.wait();
-  }
+    return stripeSwapCard.wait();
+  },
 });

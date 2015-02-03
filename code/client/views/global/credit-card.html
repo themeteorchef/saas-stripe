@@ -3,13 +3,18 @@
     <div class="col-xs-12">
       <div class="form-group">
         <label class="text-success"><i class="fa fa-lock"></i> Card Number (Totes Secure, Like a Bank)</label>
-        {{#if addNewCard}}
-          <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
-        {{else}}
-          {{#if plan.subscription.payment.card}}
-            <p class="alert alert-info">Card on File: <strong>{{plan.subscription.payment.card.type}}</strong> &mdash; {{plan.subscription.payment.card.lastFour}}</p>
-            <p><a class="add-new-card" href="#">Add a New Card</a></p>
+        {{#if isBilling}}
+          {{#if addNewCard}}
+            <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+            <p><a class="cancel-new-card" href="#">Cancel</a></p>
+          {{else}}
+            {{#if plan.subscription.payment.card}}
+              <p class="alert alert-info">Card on File: <strong>{{plan.subscription.payment.card.type}}</strong> &mdash; {{plan.subscription.payment.card.lastFour}}</p>
+              <p><a class="add-new-card" href="#">Add a New Card</a></p>
+            {{/if}}
           {{/if}}
+        {{else}}
+          <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
         {{/if}}
       </div>
     </div>
