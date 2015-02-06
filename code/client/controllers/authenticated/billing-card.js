@@ -53,12 +53,18 @@ Template.billingCard.rendered = function(){
         // Call to update our customer's "default" card with what they've passed.
         Meteor.call('stripeSwapCard', card, function(error, response){
           if (error){
+            Bert.alert(error.reason.message, 'danger');
             updateCardButton.button('reset');
-            console.log(error);
           } else {
-            updateCardButton.button('reset');
-            Session.set('currentUserPlan_' + currentUser, null);
-            Session.set('addingNewCreditCard', false);
+            if (response.rawType != undefined && response.rawType == "card_error"){
+              Bert.alert(response.message, "danger");
+              updateCardButton.button('reset');
+            } else {
+              updateCardButton.button('reset');
+              Session.set('currentUserPlan_' + currentUser, null);
+              Session.set('addingNewCreditCard', false);
+              Bert.alert("New card successfully added!", "success");
+            }
           }
         });
       } else {
@@ -70,18 +76,22 @@ Template.billingCard.rendered = function(){
         // If we're just updating an existing card
         Meteor.call('stripeUpdateCard', updates, function(error, response){
           if (error){
-            console.log(error);
-          } else {
-            // Every time you don't DRY your code an angry developer swears at
-            // a fast food employee.
+            Bert.alert(error.reason, "danger");
             updateCardButton.button('reset');
-            Session.set('currentUserPlan_' + currentUser, null);
+          } else {
+            if (response.rawType != undefined && response.rawType == "card_error"){
+              Bert.alert(response.message, "danger");
+              updateCardButton.button('reset');
+            } else {
+              updateCardButton.button('reset');
+              Session.set('currentUserPlan_' + currentUser, null);
+              Bert.alert("Credit card successfully updated!", "success");
+            }
           }
         });
       }
     }
   });
-
 }
 
 Template.billingCard.events({

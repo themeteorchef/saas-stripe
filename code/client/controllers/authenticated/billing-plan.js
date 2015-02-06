@@ -61,17 +61,22 @@ Template.billingPlan.events({
         if (error){
           // If we get an error, log it out so we can see what's wrong.
           downgradeUpgradeButton.button('reset');
-          console.log(error);
+          Bert.alert(error.reason, "danger");
         } else {
-          // If our method succeeds, we reset our button and then we update our
-          // currentUserPlan_ session variable to be null. What? We do this here
-          // because by default, our UI helper for marking the user's current plan
-          // is NOT reactive. Here, we change the currentUserPlan_ session variable,
-          // because know 1.) that it's a reactive data store, and 2.) that our UI
-          // helper depends on it. So, by changing it to null, we force our UI helper
-          // to rerun and pull down the updated information from the user. Woah smokies.
-          downgradeUpgradeButton.button('reset');
-          Session.set('currentUserPlan_' + Meteor.userId(), null);
+          if (response.error){
+            Bert.alert(response.error.message, "danger");
+          } else {
+            // If our method succeeds, we reset our button and then we update our
+            // currentUserPlan_ session variable to be null. What? We do this here
+            // because by default, our UI helper for marking the user's current plan
+            // is NOT reactive. Here, we change the currentUserPlan_ session variable,
+            // because know 1.) that it's a reactive data store, and 2.) that our UI
+            // helper depends on it. So, by changing it to null, we force our UI helper
+            // to rerun and pull down the updated information from the user. Woah smokies.
+            downgradeUpgradeButton.button('reset');
+            Session.set('currentUserPlan_' + Meteor.userId(), null);
+            Bert.alert("Subscription successfully updated!", "success");
+          }
         }
       });
     } else {

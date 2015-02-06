@@ -164,7 +164,7 @@ Meteor.methods({
           // And then we pass our update over to our updateUserPlan method.
           Meteor.call('updateUserPlan', update, function(error, response){
             if (error){
-              console.log(error);
+              stripeUpdateSubscription.return(error);
             } else {
               stripeUpdateSubscription.return(response);
             }
@@ -289,7 +289,7 @@ Meteor.methods({
           // And then we pass our update over to our updateUserPlan method.
           Meteor.call('updateUserCard', update, function(error, response){
             if (error){
-              console.log(error);
+              stripeSwapCard.return(error);
             } else {
               stripeSwapCard.return(response);
             }
