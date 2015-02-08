@@ -8,6 +8,32 @@
   margin-bottom: 0px;
 }
 
+.billing-module {
+  .list-group-item-info,
+  .list-group-item-success,
+  .list-group-item-warning,
+  .list-group-item-danger {
+    p { margin: 0; }
+    a { text-decoration: underline; }
+  }
+
+  .list-group-item-success a {
+    color: #3c763d;
+  }
+
+  .list-group-item-warning a {
+    color: #8a6d3b;
+  }
+
+  .list-group-item-danger a {
+    color: #a94442;
+  }
+
+  .list-group-item-info a {
+    color: #31708f;
+  }
+}
+
 .bm-block-label {
   float: left;
   display: block;

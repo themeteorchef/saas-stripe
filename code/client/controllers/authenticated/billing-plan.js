@@ -63,7 +63,7 @@ Template.billingPlan.events({
           downgradeUpgradeButton.button('reset');
           Bert.alert(error.reason, "danger");
         } else {
-          if (response.error){
+          if (response && response.error){
             Bert.alert(response.error.message, "danger");
           } else {
             // If our method succeeds, we reset our button and then we update our

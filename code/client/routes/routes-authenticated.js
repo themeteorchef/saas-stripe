@@ -72,3 +72,12 @@ Router.route('billingInvoice', {
     this.next();
   }
 });
+
+Router.route('billingResubscribe', {
+  path: '/billing/resubscribe',
+  template: 'billingResubscribe',
+  onBeforeAction: function(){
+    Session.set('currentRoute', 'billing');
+    this.next();
+  }
+});

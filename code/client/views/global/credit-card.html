@@ -20,17 +20,40 @@
     </div>
   </div> <!-- end .row -->
   <div class="row">
-    <div class="col-xs-4">
-      <label>Exp. Mo.</label>
-      <input type="text" name="expMo" class="form-control exp-month" placeholder="Exp. Mo.">
-    </div>
-    <div class="col-xs-4">
-      <label>Exp. Yr.</label>
-      <input type="text" name="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
-    </div>
-    <div class="col-xs-4">
-      <label>CVC</label>
-      <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
-    </div>
+    {{#if isBilling}}
+      <!--
+      If our dynamic template's data value equals billing-card, go ahead
+      and show the credit card details fields. If it's billing-resubscribe, hide
+      the fields by default, only showing them if our user asks to add a new card.
+      -->
+      {{#if isBillingCard}}
+        {{>creditCardDetails}}
+      {{else}}
+        {{#if addNewCard}}
+          {{>creditCardDetails}}
+        {{/if}}
+      {{/if}}
+    {{else}}
+      <!--
+      If we're not on either of the billing views (i.e. signup), just show the
+      fields without any additional logic.
+      -->
+      {{>creditCardDetails}}
+    {{/if}}
   </div> <!-- end .row -->
+</template>
+
+<template name="creditCardDetails">
+  <div class="col-xs-4">
+    <label>Exp. Mo.</label>
+    <input type="text" name="expMo" class="form-control exp-month" placeholder="Exp. Mo.">
+  </div>
+  <div class="col-xs-4">
+    <label>Exp. Yr.</label>
+    <input type="text" name="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
+  </div>
+  <div class="col-xs-4">
+    <label>CVC</label>
+    <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
+  </div>
 </template>

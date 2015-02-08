@@ -5,6 +5,26 @@
     </div>
     <div class="panel-body">
       <ul class="list-group">
+        <!--
+          We just map out each type here so we don't have a bunch of tangled state.
+          Wire this up as you see fit. Just make sure to account for each status type you need :)
+          See: https://stripe.com/docs/api#subscription_object.
+        -->
+        {{#if equals plan.subscription.status "trialing"}}
+          <li class="list-group-item list-group-item-info">
+            <p>You're trialing Todoodle until {{epochToString plan.subscription.ends}}. <a href="#" class="cancel-subscription">Cancel Subscription</a>.</p>
+          </li>
+        {{/if}}
+        {{#if equals plan.subscription.status "active"}}
+        <li class="list-group-item list-group-item-success">
+          <p>Your subscription is currently active! <a href="#" class="cancel-subscription">Cancel</a>.</p>
+        </li>
+        {{/if}}
+        {{#if equals plan.subscription.status "canceled"}}
+        <li class="list-group-item list-group-item-danger">
+          <p>Your subscription will end on {{epochToString plan.subscription.ends}}. Change of heart? <a href="{{pathFor 'billingResubscribe'}}">Resubscribe</a>.</p>
+        </li>
+        {{/if}}
         <li class="list-group-item bm-block clearfix">
           <span class="bm-block-label">Current Plan</span>
           <div class="bm-block-content">
@@ -13,14 +33,20 @@
               <div class="used" style="width:{{percentage plan.subscription.plan.used plan.limit}};"></div>
             </div>
           </div>
-          <a href="{{pathFor 'billingPlan'}}" class="btn btn-small btn-default pull-right">Change Plan</a>
+          {{#if equals plan.subscription.status "canceled"}}
+            <a href="{{pathFor 'billingResubscribe'}}" class="btn btn-small btn-default pull-right">Resubscribe</a>
+          {{else}}
+            <a href="{{pathFor 'billingPlan'}}" class="btn btn-small btn-default pull-right">Change Plan</a>
+          {{/if}}
         </li>
         <li class="list-group-item bm-block clearfix">
           <span class="bm-block-label">Payment</span>
           <div class="bm-block-content">
             <span><strong>{{plan.subscription.payment.card.type}}</strong> &mdash; {{plan.subscription.payment.card.lastFour}}</span>
-            <span>Next payment due: <strong>{{epochToString plan.subscription.payment.nextPaymentDue}}</strong></span>
-            <span>Amount: <strong>{{plan.amount}}</strong></span>
+            {{#unless equals plan.subscription.status "canceled"}}
+              <span>Next payment due: <strong>{{epochToString plan.subscription.payment.nextPaymentDue}}</strong></span>
+              <span>Amount: <strong>{{plan.amount}}</strong></span>
+            {{/unless}}
           </div>
           <a href="{{pathFor 'billingCard'}}" class="btn btn-small btn-default pull-right">Update Card</a>
         </li>
