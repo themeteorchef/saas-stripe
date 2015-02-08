@@ -1,6 +1,5 @@
 Template.billingOverview.events({
   'click .cancel-subscription': function(){
-    console.log("git ut");
     var confirmCancel = confirm("Are you sure you want to cancel? This means your subscription will no longer be active and your account will be disabled on the cancellation date. If you'd like, you can resubscribe later.");
     if (confirmCancel){
       Meteor.call('stripeCancelSubscription', function(error, response){

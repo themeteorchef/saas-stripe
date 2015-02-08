@@ -77,6 +77,7 @@ Router.route('billingResubscribe', {
   path: '/billing/resubscribe',
   template: 'billingResubscribe',
   onBeforeAction: function(){
+    Session.set('addingNewCreditCard', false);
     Session.set('currentRoute', 'billing');
     this.next();
   }
