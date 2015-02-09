@@ -154,7 +154,7 @@ Meteor.methods({
         // to manage plan's, so, we run our user update method here to keep things simple.
         // First we create our update object (don't forget SERVER_AUTH_TOKEN)...
         // Note: we're using a Fiber() here because we're calling to Meteor code from
-        // within async function's callback (this will cause Meteor to throw an error).
+        // within another function's callback (without this Meteor will throw an error).
         Fiber(function(){
           var update = {
             auth: SERVER_AUTH_TOKEN,
@@ -285,8 +285,7 @@ Meteor.methods({
         // Because we're running Meteor code inside of an async callback, we need to wrap
         // it in a Fiber. Note: this is a verbose way of doing this. You could refactor this
         // and the call to Stripe to use a Meteor.wrapAsync method instead. The difference is
-        // that while wrapAsync is cleaner syntax-wise, it can be a bit confusing. To keep
-        // things simple, we'll stick with a Fiber here.
+        // that while wrapAsync is cleaner syntax-wise, it can be a bit confusing.
         Fiber(function(){
           var update = {
             auth: SERVER_AUTH_TOKEN,
@@ -329,7 +328,7 @@ Meteor.methods({
       if (error) {
         stripeCancelSubscription.return(error);
       } else {
-        // Because we're running Meteor code inside of an async callback, we need to wrap
+        // Because we're running Meteor code inside of another function's callback, we need to wrap
         // it in a Fiber. Note: this is a verbose way of doing this. You could refactor this
         // and the call to Stripe to use a Meteor.wrapAsync method instead. The difference is
         // that while wrapAsync is cleaner syntax-wise, it can be a bit confusing. To keep
