@@ -1,0 +1,24 @@
+<template name="billingResubscribe">
+  <div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4 center-block" style="float: none;">
+      <div class="panel panel-default billing-module">
+        <div class="panel-heading">
+          <h3 class="panel-title"><a href="{{pathFor 'billing'}}" class="text-muted">Billing</a> / Resubscribe</h3>
+        </div>
+        <form id="resubscribe">
+          <div class="panel-body">
+            <p class="alert alert-success">Looking to resubscribe to Todoodle? Awesome! We're excited to have you back. To flip the on switch for your account, go ahead and pick out a plan you'd like below. We'll also need your current credit card information. Keep in mind: <strong>this will charge your card immediately</strong>.</p>
+            <div class="form-group">
+              {{>selectPlan}}
+            </div>
+            {{> Template.dynamic template="creditCard" data="billing-resubscribe"}}
+          </div> <!-- end .panel-body -->
+          <div class="panel-footer">
+            <button type="submit" class="btn btn-success resubscribe" data-loading-text="Resubscribing...">Resubscribe</button>
+            <a href="{{pathFor 'billing'}}" class="btn btn-default">Cancel</a>
+          </div>
+        </form> <!-- end #resubscribe -->
+      </div>
+    </div> <!-- end .col-xs-12 -->
+  </div> <!-- end .row -->
+</template>
