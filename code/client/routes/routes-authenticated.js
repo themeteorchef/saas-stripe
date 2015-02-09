@@ -39,6 +39,12 @@ Router.route('todoList', {
 Router.route('billing', {
   path: '/billing',
   template: 'billing',
+  subscriptions: function(){
+    var subs = [
+      Meteor.subscribe('userInvoices')
+    ]
+    return subs;
+  },
   onBeforeAction: function(){
     Session.set('currentRoute', 'billing');
     this.next();
@@ -67,6 +73,14 @@ Router.route('billingCard', {
 Router.route('billingInvoice', {
   path: '/billing/invoice/:_id',
   template: 'billingInvoice',
+  subscriptions: function(){
+    var subs = [
+      Meteor.subscribe('viewInvoice', this.params._id)
+    ]
+  },
+  data: function(){
+    return Invoices.findOne({"_id": this.params._id});
+  },
   onBeforeAction: function(){
     Session.set('currentRoute', 'billing');
     this.next();

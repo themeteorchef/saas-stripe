@@ -9,7 +9,7 @@ Meteor.users.allow({
   update: function(){
     return false;
   },
-  remove: function(userId, doc){
+  remove: function(){
     return false;
   }
 });

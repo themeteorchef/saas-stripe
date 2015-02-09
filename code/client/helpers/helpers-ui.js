@@ -79,6 +79,15 @@ UI.registerHelper('equals', function(c1,c2){
 });
 
 /*
+* Cents to Dollars
+* Take the passed value in cents and convert it to USD.
+*/
+
+UI.registerHelper('centsToDollars', function(cents){
+  return "$" + cents / 100;
+});
+
+/*
 * Percentage
 * Take the two passed values, divide them, and multiply by 100 to return percentage.
 */

@@ -1,10 +1,10 @@
-TodoLists = new Meteor.Collection('todo-lists');
+Invoices = new Meteor.Collection('invoices');
 
 /*
 * Allow
 */
 
-TodoLists.allow({
+Invoices.allow({
   insert: function(){
     return false;
   },
@@ -20,7 +20,7 @@ TodoLists.allow({
 * Deny
 */
 
-TodoLists.deny({
+Invoices.deny({
   insert: function(){
     return true;
   },
