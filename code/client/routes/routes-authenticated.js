@@ -59,6 +59,7 @@ Router.route('billingCard', {
   template: 'billingCard',
   onBeforeAction: function(){
     Session.set('currentRoute', 'billing');
+    Session.set('addingNewCreditCard', false);
     this.next();
   }
 });
@@ -67,6 +68,16 @@ Router.route('billingInvoice', {
   path: '/billing/invoice/:_id',
   template: 'billingInvoice',
   onBeforeAction: function(){
+    Session.set('currentRoute', 'billing');
+    this.next();
+  }
+});
+
+Router.route('billingResubscribe', {
+  path: '/billing/resubscribe',
+  template: 'billingResubscribe',
+  onBeforeAction: function(){
+    Session.set('addingNewCreditCard', false);
     Session.set('currentRoute', 'billing');
     this.next();
   }

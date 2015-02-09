@@ -5,30 +5,27 @@
     </div>
     <div class="panel-body">
       <ul class="list-group">
-        <li class="list-group-item {{#if equals plan.subscription.plan.name 'tiny'}}list-group-item-success{{/if}} bm-block clearfix">
-          <div class="bm-block-content plan">
-            <span class="plan-name-quota"><strong>Tiny</strong> &mdash; 1 list</span>
-          </div>
-          <a href="{{pathFor 'billingPlan'}}" disabled="disabled" class="btn btn-small btn-default pull-right">Downgrade</a>
-        </li>
-        <li class="list-group-item {{#if equals plan.subscription.plan.name 'small'}}list-group-item-success{{/if}} bm-block clearfix">
-          <div class="bm-block-content plan">
-            <span class="plan-name-quota"><strong>Small</strong> &mdash; 5 lists</span>
-          </div>
-          <a href="#" disabled="disabled" class="btn btn-small btn-success pull-right">Current Plan</a>
-        </li>
-        <li class="list-group-item {{#if equals plan.subscription.plan.name 'medium'}}list-group-item-success{{/if}} bm-block clearfix">
-          <div class="bm-block-content plan">
-            <span class="plan-name-quota"><strong>Medium</strong> &mdash; 10 lists</span>
-          </div>
-          <a href="{{pathFor 'billingPlan'}}" class="btn btn-small btn-default pull-right">Upgrade</a>
-        </li>
-        <li class="list-group-item {{#if equals plan.subscription.plan.name 'large'}}list-group-item-success{{/if}} bm-block clearfix">
-          <div class="bm-block-content plan">
-            <span class="plan-name-quota"><strong>Large</strong> &mdash; 20 lists</span>
-          </div>
-          <a href="{{pathFor 'billingPlan'}}" class="btn btn-small btn-default pull-right">Upgrade</a>
-        </li>
+        {{#each plans}}
+          <li class="list-group-item {{#if equals plan.subscription.plan.name name}}list-group-item-success{{/if}} bm-block clearfix">
+            <div class="bm-block-content plan">
+              <span class="plan-name-quota"><strong>{{capitalize name}}</strong> &mdash; {{limitString limit}}</span>
+            </div>
+            <!-- Note: this is verbose on purpose. 1.) For readability, 2.) For sanity. -->
+            {{#if equals plan.subscription.plan.name name}}
+              <button type="button" disabled="disabled" class="btn btn-success pull-right">Current Plan</button>
+            {{else}}
+              {{#if upgradeAvailable amount.cents}}
+                <button type="button" data-loading-text="Upgrading..." class="btn btn-default pull-right downgrade-upgrade">Upgrade</button>
+              {{else}}
+                {{#if downgradeAvailable limit}}
+                  <button type="button" data-loading-text="Downgrading..." class="btn btn-default pull-right downgrade-upgrade">Downgrade</button>
+                {{else}}
+                  <button type="button" disabled="disabled" class="btn btn-default pull-right downgrade-unavailable">Downgrade Unavailable</button>
+                {{/if}}
+              {{/if}}
+            {{/if}}
+          </li>
+        {{/each}}
       </ul>
     </div>
   </div>

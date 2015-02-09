@@ -1,25 +1,59 @@
 <template name="creditCard">
   <div class="row">
     <div class="col-xs-12">
-      <!-- Do an {{#if currentUser.profile.billing.card}} -->
       <div class="form-group">
         <label class="text-success"><i class="fa fa-lock"></i> Card Number (Totes Secure, Like a Bank)</label>
-        <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+        {{#if isBilling}}
+          {{#if addNewCard}}
+            <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+            <p><a class="cancel-new-card" href="#">Cancel</a></p>
+          {{else}}
+            {{#if plan.subscription.payment.card}}
+              <p class="alert alert-info">Card on File: <strong>{{plan.subscription.payment.card.type}}</strong> &mdash; {{plan.subscription.payment.card.lastFour}}</p>
+              <p><a class="add-new-card" href="#">Add a New Card</a></p>
+            {{/if}}
+          {{/if}}
+        {{else}}
+          <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+        {{/if}}
       </div>
     </div>
   </div> <!-- end .row -->
   <div class="row">
-    <div class="col-xs-4">
-      <label>Exp. Mo.</label>
-      <input type="text" name="expMo" class="form-control exp-month" placeholder="Exp. Mo.">
-    </div>
-    <div class="col-xs-4">
-      <label>Exp. Yr.</label>
-      <input type="text" name="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
-    </div>
-    <div class="col-xs-4">
-      <label>CVC</label>
-      <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
-    </div>
+    {{#if isBilling}}
+      <!--
+      If our dynamic template's data value equals billing-card, go ahead
+      and show the credit card details fields. If it's billing-resubscribe, hide
+      the fields by default, only showing them if our user asks to add a new card.
+      -->
+      {{#if isBillingCard}}
+        {{>creditCardDetails}}
+      {{else}}
+        {{#if addNewCard}}
+          {{>creditCardDetails}}
+        {{/if}}
+      {{/if}}
+    {{else}}
+      <!--
+      If we're not on either of the billing views (i.e. signup), just show the
+      fields without any additional logic.
+      -->
+      {{>creditCardDetails}}
+    {{/if}}
   </div> <!-- end .row -->
+</template>
+
+<template name="creditCardDetails">
+  <div class="col-xs-4">
+    <label>Exp. Mo.</label>
+    <input type="text" name="expMo" class="form-control exp-month" placeholder="Exp. Mo.">
+  </div>
+  <div class="col-xs-4">
+    <label>Exp. Yr.</label>
+    <input type="text" name="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
+  </div>
+  <div class="col-xs-4">
+    <label>CVC</label>
+    <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
+  </div>
 </template>

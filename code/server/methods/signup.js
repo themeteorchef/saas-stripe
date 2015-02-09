@@ -80,7 +80,9 @@ Meteor.methods({
                         lastFour: stripeCustomer.cards.data[0].last4
                       },
                       nextPaymentDue: response.current_period_end
-                    }
+                    },
+                    status: response.status,
+                    ends: response.current_period_end
                   }
                 }
 
