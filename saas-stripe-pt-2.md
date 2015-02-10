@@ -13,7 +13,7 @@ Because we'll be doing a bit of work in the UI, we'll use [themeteorchef:bert](h
 </div>
 
 ### Changing Plans
-When we left off in part one, we were focused on wiring up the customer's plan information to the billing overview page. With all of our static data in place, now we need to focus on making things a bit more dynamic. To get started, we'll focus on making it possible for our customer's to change their current plan.
+When we left off in part one, we were focused on wiring up the customer's plan information to the billing overview page. With all of our static data in place, now we need to focus on making things a bit more dynamic. To get started, we need to make it possible for our customers to change their current plan.
 
 Over on the `/billing/plan` page, we've got a template setup that pulls in the list of plans we defined in `settings.json` during part one. Let's take a look at the markup for the template and then see how we wire up the code to make it work.
 
@@ -49,7 +49,7 @@ Over on the `/billing/plan` page, we've got a template setup that pulls in the l
 
 Okay, so, there's quite a bit going on here. Let's focus on the `{{#each plans}}` part. Here, we're simply telling our template for each plan returned to our helper (this is the array on plans in `settings.json`—we'll cover wiring this up soon), we want to output a list item. Inside of that list item, we grab the name of the current plan and then we get into some sticky logic. What the heck is this?
 
-To make things a bit easier on our customers, we want to give them a bit of [affordance]() as to _what_ plans they can change to and the impact that will have on their account. We break this into two parts by using the handlebar's `{{#if}}` helper in combination with our own `{{equals}}` helper.
+To make things a bit easier on our customers, we want to give them a bit of [affordance](http://en.wikipedia.org/wiki/Affordance) as to _what_ plans they can change to and the impact that will have on their account. We break this into two parts by using the handlebar's `{{#if}}` helper in combination with our own `{{equals}}` helper.
 
 Recall that in part one, we create a UI helper called `{{plan}}` that returns the current customer's plan information. Here, we access that, comparing the value of the customer's current plan name (e.g. "small") with the name of the plan currently being iterated in our `{{#each}}` block. Recall that our `{{equals}}` helper is setup to compare the first and second values we pass to it for equality. If they _are_ the same, we return a single button to our interface that's disabled and labeled with "Current Plan."
 
@@ -97,7 +97,7 @@ Our `upgradeAvailable` and `downgradeAvailable` helpers are a _bit_ more complic
 
 Notice that in our helper declaration, we're passing an argument called `iteratedPlanAmount`. This value corresponds to the `amount.cents` value seen in our `{{#if}}` block `{{#if upgradeAvailable amount.cents}}`. The cool part is that `amount.cents` is given to us by our `{{#each}}` block. In other words, this value is equal to the _current plan being looped_. Crazy, right? To make things easy, we just pass this value to our helper so we can make use of it in our logic.
 
-At the bottom of our helper definition, we set a variable `currentPlanAmount` equal to the value of the user's current plan amount retrieved from the server (with a bit of conversion from a string with a prefixed "$" into an integer). Using a ternary operator, we check to see whether the user's current plan amount is _less than_ the current plan being iterated in our `{{#each}}` block. If it is, we return true meaning that "the plan we're on costs less than the one being looped, so the plan being looped is an upgrade from what we have now." Make sense? Back over in our template real quick, we can see the result of this:
+At the bottom of our helper definition, we set a variable `currentPlanAmount` equal to the value of the customer's current plan amount retrieved from the server (with a bit of conversion from a string with a prefixed "$" into an integer). Using a ternary operator, we check to see whether the user's current plan amount is _less than_ the current plan being iterated in our `{{#each}}` block. If it is, we return `true` meaning that "the plan we're on costs less than the one being looped, so the plan being looped is an upgrade from what we have now." Make sense? Back over in our template real quick, we can see the result of this:
 
 <p class="block-header">/client/authenticated/billing/billing-plan.html</p>
 ```.lang-markup
@@ -125,7 +125,7 @@ Template.billingPlan.helpers({
 
 Hold up! Shouldn't this be almost identical to the `upgradeAvailable` helper? Almost. Notice that here instead of looking at _price_ we're looking at the number of todo lists the customer has used up vs. the number of lists that come with each plan. Why is that? Consider this: if a user starts out with the "Large" plan (20 lists) and uses up 15 of those 20 lists, we wouldn't want them to be able to downgrade to the "Medium" plan (10 lists). Why not? This would mean that the user received 5 todo lists for free. [Oh _hell_ no](https://www.youtube.com/watch?v=im_5QdHp04E). So how do we stop it?
 
-Notice that we're using the same trick as before by passing over the currently looped plan's `limit` as an argument to our helper. Next, we piggyback on our `getUserPlan` Session helper to get our user's current plan information. Wait...how does that work? This works because we're already setting the value of our `getUserPlan` Session helper in our `upgradeAvailable` helper. This works because both of our template helpers are being called on render. As a result, the value of `Session.get('getUserPlan_' + currentUser)` is accessible to both without jumping through hoops. Neat!
+Notice that we're using the same trick as before by passing over the currently looped plan's `limit` as an argument to our helper. Next, we piggyback on our `getUserPlan_` Session helper to get our user's current plan information. Wait...how does that work? This works because we're already setting the value of our `getUserPlan_` Session helper in our `upgradeAvailable` helper. This works because both of our template helpers are being called on render. As a result, the value of `Session.get('getUserPlan_' + currentUser)` is accessible to both without jumping through hoops. Neat!
 
 Now, we just need to look at how many lists the customer has currently used and decided whether or not that value is _less than or equal to_ our currently looped plan. If it _is_ less than or equal to, we enable the downgrade option. If it's _not_ we disable it. Now we can guarantee that a user can't change to a plan and keep extra lists in tow.
 
@@ -215,15 +215,15 @@ First, we do a `check()` on the `plan` argument we passed (remember, this is equ
 
 <div class="note">
   <h3>A quick note</h3>
-  <p>It was mentioned in the comments for part one of this recipe over on [crater.io](http://crater.io/posts/7xmPagxuQjwMqZzcY) by Arunoda from [Meteor Hacks](http://meteorhacks.com) that instead of all this Future stuff, we could just use `Meteor.wrapAsync`. He's right. There's a good reason I _haven't_ used it here and that has to do with comprehension. This is opinionated, but I've found the syntax of `Meteor.wrapAsync()` to be a bit confusing.</p>
+  <p>It was mentioned in the comments for part one of this recipe over on <a href="http://crater.io/posts/7xmPagxuQjwMqZzcY">crater.io</a> by Arunoda from <a href="http://meteorhacks.com">Meteor Hacks</a> that instead of all this Future stuff, we could just use `Meteor.wrapAsync`. He's right. There's a good reason I _haven't_ used it here and that has to do with comprehension. This is opinionated, but I've found the syntax of `Meteor.wrapAsync()` to be a bit confusing.</p>
   <p>After tinkering with the code above, I found that it was much easier to explain what was happening using the Future's pattern. I should note that _neither_ option is wrong. While I can't speak on performance, I'd imagine that with the little bit of clarity you gain from using a Future, you lose a tiny bit of performance. This is entirely, speculative, though, and I'd encourage you trying out both patterns in your own application(s) before putting a stake in the ground. Use what fits best!</p>
 </div>
 
-Alright, moving on. Next, we need to do a quick lookup on our user so we can their customerId. Remember that we're not publishing this to the client, so we need to remember to pull it in here. Once we have it, we call to `Stripe.customers.updateSubscrtipion()` passing our customer's `customerId`. Because we're just updating their plan, we only need to specify one parameter, `plan`, and set it equal to our `plan` argument passed from our template.
+Alright, moving on. Next, we need to do a quick lookup on our user so we can get Stripe their `customerId`. Remember that we're not publishing this to the client, so we need to remember to pull it in here. Once we have it, we call to `Stripe.customers.updateSubscrtipion()` passing our customer's `customerId`. Because we're just updating their plan, we only need to specify one parameter, `plan`, and set it equal to our `plan` argument passed from our template.
 
-Things get a little sticker when we get into updating our user's plan _locally_.
+Things get a little sticker when we get into updating our user's plan in our _local_ database.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
 Fiber(function(){
   var update = {
@@ -243,9 +243,9 @@ Fiber(function(){
 }).run();
 ```
 
-Because we're running Meteor code in the callback of another function, Meteor will require it to run within a `Fiber`. Why? As I understand it, once we're in the callback of another function, the original Meteor environment (outside of the callback we're in) is no longer available. This means that Meteor cannot "see" things like `Meteor.userId()` or call to methods. Wrapping everything in a `Fiber(function(){}).run()` call helps us get around that.
+Because we're running Meteor code in the callback of another function, Meteor will require it to run within a `Fiber`. Why? Once we're in the callback of another function, the original Meteor environment (outside of the callback we're in) is no longer available. This means that Meteor cannot "see" things like `Meteor.userId()` or call to methods. Wrapping everything in a `Fiber(function(){}).run()` call helps us get around that.
 
-Inside of our Fiber, we call to `updateUserPlan`, passing our update object we've defined above it. Notice that here, we're making use of the `SERVER_AUTH_TOKEN` pattern from part one again. We're also pulling in some data that we've received in the `subscription` argument from Stripe. Let's jump over to see what this method is doing.
+Inside of our Fiber, we call to `updateUserPlan`, passing our update object we've defined above it. Notice that here, we're making use of the `SERVER_AUTH_TOKEN` pattern from [part one](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1) again. We're also pulling in some data that we've received in the `subscription` argument from Stripe. Let's jump over to see what this method is doing.
 
 <p class="block-header">/server/methods/data/update/user.js</p>
 ```.lang-javascript
@@ -275,13 +275,13 @@ updateUserSubscription: function(update){
 }
 ```
 
-Look familliar? Just like we did in part one, we're wrapping the meat of our method in a check for `SERVER_AUTH_TOKEN`. Once we're sure we're on the server, we just call to `Meteor.users.update`, passing our user's id. Easy peasy. Our update is simply the values we passed over to our method from within our `Stripe.customers.updateSubscription` callback. It's a bit Inception-y, but you can sort of think of it like hot potato. Each of our methods is just tossing the potato (our call from the client side) until it gets a response (or an error). Once our user is updated, we simply return our `updateUserSubscription` future we've defined here _back to_ our `stripeUpdateSubscription` method to ultimately return to the client.
+Look familliar? Just like we did in part one, we're wrapping the meat of our method in a check for `SERVER_AUTH_TOKEN`. Once we're sure we're on the server, we just call to `Meteor.users.update`, passing our user's `id`. Easy peasy. Our update is simply the values we passed over to our method from within our `Stripe.customers.updateSubscription` callback. It's a bit Inception-y, but you can sort of think of it like hot potato. Each of our methods is just tossing the potato (our call from the client side) until it gets a response (or an error). Once our user is updated, we simply return our `updateUserSubscription` Future we've defined here _back to_ our `stripeUpdateSubscription` method to ultimately return to the client.
 
-So let's pause for a second. What does all of this actually _achieve_? Two things: it ensures that our customer's subscription has been updated _on Stripe's servers_, but also that their subscription has been updated on _our servers_. We do this "twice" because it allows us to store some knowledge of our customers current "state" locally. We could alternatively just call to Stripe every time we wanted this information, but that could get pretty costly. It also means Stripe needs to be working no matter what, or we risk breaking our application. This may seem like a lot of work, but it's all in service of a bigger point: a great customer experience. Even though we're just lowly developers, we can [kick those design nerds in the shins](http://www.hapkido-defense-system.com/VMC%20Punch%20Defense%2002.gif) with little gems like this.
+So let's pause for a second. What does all of this actually _achieve_? Two things: it ensures that our customer's subscription has been updated _on Stripe's servers_, but also that their subscription has been updated on _our servers_. We do this "twice" because it allows us to store some knowledge of our customers current "state" locally. We could alternatively just call to Stripe every time we wanted this information, but that could get pretty costly. It also means Stripe needs to be working no matter what, or we risk breaking our application. This may seem like a lot of work, but it's all in service of a bigger point: a great customer experience. Even though we're just lowly developers, we can [kick those design nerds in the shins](http://youtu.be/VZ2CSpNze5Q?t=10s) with little gems like this.
 
-Okay. Before we call this part complete, let's head back over to the client to see what we do when our response makes it back to the client.
+Okay. Before we call this part complete, let's head back over to the client to see what we do when our response finally makes it _back to_ the client.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/controllers/authenticated/billing-plan.js</p>
 ```.lang-javascript
 Meteor.call('stripeUpdateSubscription', plan, function(error, response){
   if (error){
@@ -302,7 +302,7 @@ Meteor.call('stripeUpdateSubscription', plan, function(error, response){
 
 Not this again! Yep. Sorry. Because we can't be 100% certain that Stripe's response will be in the _positive_, we need to check the `response` argument in our method's callback. First, we make sure there's not an error from our method itself (e.g. "method is not defined"). Next, if we get a response (meaning Stripe is sending us something) we need to check to see if it has an `error` object defined and if not, to update our UI. There's a few things to pay attention to here. First, whether there's an error or not, we're resetting our button's state.
 
-We're also introducing an alert by using the `themeteorchef:bert` package we installed earlier. Depending on whether we get an error or our method is successfuly, we tell `Bert` which message style to use (errors are marked as `'danger'` to display alerts in red and successes are marked in green with `'success'`). Now, when something happens, good or bad, we can let the user know to help in their decision process. We're also doing something odd here. Why are we setting our `currentUserPlan_` Session variable to equal `null`?
+We're also introducing an alert by using the `themeteorchef:bert` package we installed earlier. Depending on whether we get an error or our method is successful, we tell `Bert` which message style to use (errors are marked as `'danger'` to display alerts in red and successes are marked in green with `'success'`). Now, when something happens, good or bad, we can let the user know to help in their decision process. We're also doing something odd here. Why are we setting our `currentUserPlan_` Session variable to equal `null`?
 
 [Witchcraft](http://youtu.be/XfdiXBA7f6U?t=1m16s)! No. Not at all. But this is neat. Recall that we're making use of our `{{plan}}` UI helper to select our user's current plan. While handy for obscuring the user's plan data from the client, it actually catches us off guard a bit by _not_ being reactive. Think about it: we're calling to a method on the server which by itself isn't reactive. We do know, though, that our helper is dependent on our Session variable `currentUserPlan_` which _is_ reactive. By toggling this to `null` when our method call is successful, we're forcing our UI helper to update itself. This means that the UI will correctly update to reflect the user's new plan selection. Wacky.
 
@@ -319,7 +319,7 @@ Introduced in Meteor 0.8.2, [dynamic templates](http://docs.meteor.com/#/full/te
 
 &mdash; via [Meteor Template.dynamic Documentation](http://docs.meteor.com/#/full/template_dynamic)
 
-In our case, we're not using these _quite_ this way. Instead, we're making use of the dynamic template's data context. So this makes sense, let's look at how we've included our credit card template into our `billingCard` template:
+In our case, we're not using these _quite_ this way. Instead, we're making use of the dynamic template's `data` context. So this makes sense, let's look at how we've included our credit card template into our `billingCard` template:
 
 #### Refactoring the creditCard Template
 
@@ -355,9 +355,9 @@ Template.creditCard.helpers({
 });
 ```
 
-A few things going on here. First, our `isBilling` helper helps us to find out if our `creditCard` template is appearing in one of our billing views (`/billing/card` or `/billing/resubscribe` which we'll cover in a bit). To find out, we simply look the returned value of `Template.instance().data` (this is equivalent to the string we've passed to our dynamic template include) and use the JavaScript `.search()` method to see if it includes the word "billing." If it does (denoted by the return value being greater than `-1`), we return true. If it's not, we return false. Let's look at how this appears in the `creditCard` template:
+A few things going on here. First, our `isBilling` helper helps us to find out if our `creditCard` template is appearing in one of our billing views (`/billing/card` or `/billing/resubscribe` which we'll cover in a bit). To find out, we simply look the returned value of `Template.instance().data` (this is equivalent to the string we've passed to our dynamic template include in the `data` parameter) and use the JavaScript `.search()` method to see if it includes the word "billing." If it does (denoted by the return value being greater than `-1`), we return `true`. If it's not, we return `false`. Let's look at how this appears in the `creditCard` template:
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/views/global/credit-card.html</p>
 ```.lang-markup
 {{#if isBilling}}
   {{#if addNewCard}}
@@ -388,9 +388,9 @@ A few things going on here. First, our `isBilling` helper helps us to find out i
 
 What we're looking to accomplish here is to decide when our credit card form should display some additional items with it. When we're not in a billing view (e.g. on the `/signup` page), we just want to display our form as-is. In the billing views, though, we need to account for displaying whether or not the customer has a credit card on file with us. The `isBilling` check allows us to separate these two states accordingly.
 
-That's not all, though. We also have to other helpers: `isBillingCard` and `addNewCard`. The first, `isBillingCard` does what you might expect and lets us know if we're on the `billingCard` template (this time matching the data context passed to our template include specifically to the string `"billing-card"`). In our template, we can see this is used to target the visibility of our `creditCardDetails` template (the expiration month/year and CVC fields).
+That's not all, though. We also have two other helpers: `isBillingCard` and `addNewCard`. The first, `isBillingCard` does what you might expect and lets us know if we're on the `billingCard` template (this time matching the `data` context passed to our template include specifically to the string `"billing-card"`). In our template, we can see this is used to target the visibility of our `creditCardDetails` template (the expiration month/year and CVC fields).
 
-Our last helper, here, `addNewCard` is also used to toggle state. We simply check out `addingNewCreditCard` Session variable and return it (it will be either `true`, `false`, or `null`). This just decides whether or not we should display our credit card form with a "Add a New Card," or "Cancel" link below it. Ultimately, this lets our customer change their mind between adding a new card and using their existing one.
+Our last helper, here, `addNewCard` is also used to toggle state. We simply check our `addingNewCreditCard` Session variable and return it (it will be either `true`, `false`, or `null`). This just decides whether or not we should display our credit card form with a "Add a New Card," or "Cancel" link below it. Ultimately, this lets our customer change their mind between adding a new card and using their existing one. We won't jump to it here, but if we look at our event map for the `creditCard` template, we can see how clicking these links changes the value of our `addingNewCreditCard` Session variable.
 
 <div class="note">
   <h3>A quick note</h3>
@@ -399,9 +399,9 @@ Our last helper, here, `addNewCard` is also used to toggle state. We simply chec
 
 #### Adding a New Card
 
-Let's look at our controller for updating or adding a new credit card. This one is sort of a doozie, because we're looking to determine whether the customer is _updating_ their existing card, or _adding_ a new card entirely. Our focus will be on the `rendered` callback of our `billingCard` template.
+Let's look at our controller for updating or adding a new credit card. This one is sort of a doozie because we're looking to determine whether the customer is _updating_ their existing card, or _adding_ a new card entirely. Our focus will be on the `rendered` callback of our `billingCard` template.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/controllers/authenticated/billing-card.js</p>
 ```.lang-javascript
 Template.billingCard.rendered = function(){
   $('#billing-card').validate({
@@ -445,7 +445,7 @@ Template.billingCard.rendered = function(){
 
 This should look somewhat familiar. Just like with our signup template in part one, we're calling a few methods. The difference this time, is that we're looking at our `addingNewCreditCard` Session variable to determine _which_ method to call. Here, we're looking at our first method call `stripeSwapCard` that will be used when the customer is adding a new card. Let's jump up to the server to see this fella in action.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
 stripeSwapCard: function(card){
   check(card, {
@@ -487,15 +487,16 @@ stripeSwapCard: function(card){
       }).run();
     }
   });
+}
 ```
 
-This pattern should look pretty familiar by now. Here, we do a quick check on the structure of our `card` argument and then setup a `Future()` to get our return value from Stripe (and subsequently our `updateUserCard` method). Just like in our `stripeUpdateSubscription` method, here, we wrap grab data from our callback's response argument (here this is `customer`), grab some data from it, and then pass it over to _another_ method (wrapped in a `Fiber()`) to update our user's card. The same thing applies as before: we 1.) perform the update on Stripe, and 2.) insert the confirmation into _our_ database via a method. Could we simplify this?
+This pattern should look pretty familiar by now. Here, we do a quick `check()` on the structure of our `card` argument and then setup a `Future()` to get our return value from Stripe (and subsequently our `updateUserCard` method). Just like in our `stripeUpdateSubscription` method, here, we grab data from our callback's response argument (here this is `customer`), grab some data from it, and then pass it over to _another_ method (wrapped in a `Fiber()`) to update our customer's card. The same thing applies as before: we 1.) perform the update on Stripe, and 2.) insert the confirmation into _our_ database via a method. Could we simplify this?
 
-Yep! There's a good reason for keeping this verbose. It's important to understand _how_ the data is moving through Stripe and into our database. We could tackle this pattern with a number of different solutions (e.g. skipping method calls and using plain server-side functions). By doing it this way in the demo, though, we can see each explicit step taken to produce the end result we want. Integrating third-party systems like Stripe, while easier than some concepts, can still introduce a lot of repetitive patterns. The challenge for you is to apply your programming knowledge to refactor code like this to be more performant or fitting for your application. [Teach a person to fish](http://en.wiktionary.org/wiki/give_a_man_a_fish_and_you_feed_him_for_a_day;_teach_a_man_to_fish_and_you_feed_him_for_a_lifetime)...
+Yep! There's a good reason for keeping this verbose. It's important to understand _how_ the data is moving through Stripe and into our database. We could tackle this pattern with a number of different solutions (e.g. skipping method calls and using plain server-side functions). By doing it this way in the demo, though, we can see each explicit step taken to produce the end result we want. Integrating third-party systems like Stripe, while easier than some concepts, can still introduce a lot of repetitive patterns. The challenge for you is to apply your programming knowledge to refactor code like this to be more performant or fitting for your application.
 
 We're going to skip following the trail over to the `updateUserCard` method and instead hop back to the client assuming we've receive a positive response.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/controllers/authenticated/billing-card.js</p>
 ```.lang-javascript
 if (error){
   Bert.alert(error.reason.message, 'danger');
@@ -518,9 +519,9 @@ Back on the client, we need to handle what happens in the callback of our `strip
 With that in mind, we make use of our `Bert.alert()` method again, handling either the error or success state as necessary. Notice, too, that we're resetting our Session variables once again to achieve the same results as before (toggling reactivity on our plan data). Making sense? Great! Now...how about _updating_ an existing credit card?
 
 #### Updating a Credit Card
-Recall that we've set up our `creditCard` template to display whether or not the customer has an existing card "on file." When this is the case, Stripe allows us to update the "Expiration Month" and "Expiration Year" values on the card. If you look at our demo, you can see that our `creditCard` template is already account for this on the `/billing/card` page. Nifty! Since we've already gone over toggling UI state in our template, let's look at the other half of our `billingCard` template's `submitHandler` callback.
+Recall that we've set up our `creditCard` template to display whether or not the customer has an existing card "on file." When this is the case, Stripe allows us to update the "Expiration Month" and "Expiration Year" values on the card. If you look at our demo, you can see that our `creditCard` template is already accounting for this on the `/billing/card` page. Nifty! Since we've already gone over toggling UI state in our template, let's look at the other half of our `billingCard` template's `submitHandler` callback.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/controllers/authenticated/billing-card.js</p>
 ```.lang-javascript
 var newCard = Session.get('addingNewCreditCard');
 if (newCard){
@@ -547,12 +548,11 @@ if (newCard){
     }
   });
 }
-}
 ```
 
-Just like adding a new card! But with one twist. Instead of calling to `stripeSwapCard`, here, we're actually calling to `stripeUpdateCard`. The good news? This method is more or less identical to our `stripeSwapCard` method in terms of behavior. The only difference being that we're passing different data to be updated and calling a different Stripe API method (`Stripe.customers.updateCard`). We're also doing something else unique do to the requirements of `stripe.customers.updateCard`. Let's hop up to the server quick and check it out.
+Just like adding a new card! But with one twist. Instead of calling to `stripeSwapCard`, here, we're actually calling to `stripeUpdateCard`. The good news? This method is more or less identical to our `stripeSwapCard` method in terms of behavior. The only difference being that we're passing different data to be updated and calling a different Stripe API method (`Stripe.customers.updateCard`). We're also doing something else unique due to the requirements of `stripe.customers.updateCard`. Let's hop up to the server quick and check it out.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
 stripeUpdateCard: function(updates){
   [...]
@@ -574,7 +574,7 @@ stripeUpdateCard: function(updates){
 
 Because Stripe's `updateCard` method requires not only a `customerId` but also a _cardId_, we need to retrieve it first _before_ we update the card. It's important to note that this isn't 100% necessary. In reality, we could have stored the ID of customer's current credit card in our database. There's nothing wrong with this, it was just more or less an oversight.
 
-If you want to save yourself an extra API call, it's worth exploring storing the `cardId` (again, this isn't the card number itself but a unique identifier Stripe uses to reference the card) in your own database. The rest of this is what you expect: hop over to the `stripeRetrieveCustomer` method, snag the `cardId`, and then pass it back to our call to `Stripe.customers.updateCard` method. Boom! Once this completes your customers card will be updated. Back on the client, we'll fire an alert message via `Bert` to let them know all is well.
+If you want to save yourself an extra API call, it's worth exploring storing the `cardId` (again, this isn't the card number itself but a unique identifier Stripe uses to _reference_ the card) in your own database. The rest of this is what you expect: hop over to the `stripeRetrieveCustomer` method, snag the `cardId`, and then pass it back to our call to `Stripe.customers.updateCard` method. Boom! Once this completes your customers card will be updated. Back on the client, we'll fire an alert message via `Bert` to let them know all is well and toggle reactivity on our `{{plan}}` helper by setting `currentUserPlan_` to `null`.
 
 ### Subscription Status
 Okay, so, we've got some important functionality wired up to help our customer better control the state of their account. But we've left something out...actually _displaying_ the account state. Next, we'll learn how to manage the customer's subscription status and help them to understand the current state of their account.
@@ -582,7 +582,7 @@ Okay, so, we've got some important functionality wired up to help our customer b
 #### Displaying Status
 The first thing we need to do is to actually display the customer's account status. [Duh](http://media.giphy.com/media/Lndtxw3ztLhNC/giphy.gif). Let's take a look at a little addition we've made to the `billingOverview` template to get this done.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/views/authenticated/billing/billing-overview.html</p>
 ```.lang-markup
 <template name="billingOverview">
   [...]
@@ -610,7 +610,7 @@ The first thing we need to do is to actually display the customer's account stat
 </template>
 ```
 
-Oh yeah, code reusability! Look at our `{{plan}}` UI helper [shine](http://media.giphy.com/media/2UpzC3iPenf44/giphy.gif). Can you see what's happening here. It's actually quite beautiful. Using a combination of our `{{equals}}` helper along with an `{{#if}}` block, we're simply checking to see whether the value of the current customer's subscription status is equal to the string we've specified: `trialing`, `active`, or `canceled`.
+Oh yeah, code reusability! Look at our `{{plan}}` UI helper [shine](http://media.giphy.com/media/2UpzC3iPenf44/giphy.gif). Can you see what's happening here? It's actually quite beautiful. Using a combination of our `{{equals}}` helper along with an `{{#if}}` block, we're simply checking to see whether the value of the current customer's subscription status is equal to the string we've specified: `trialing`, `active`, or `canceled`.
 
 Depending on the state, we prepend our list of plan data in `billingOverview` with a colored bar to match the state (green for `active`, yellow for `trialing`, and red for `canceled`). We also include an option to _cancel_ their subscription or resubscribe depending on the current state. Woah!
 
@@ -624,7 +624,7 @@ Now that we have this in place, let's focus on implementing the cancellation fea
 #### Canceling a Subscription
 This is actually one of the easiest parts of our Stripe implementation. To make this work, we just need to add a click event to each of the "Cancel" links that we've displayed contextually in our subscription status bar. Let's take a look at the controller for this:
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/controllers/authenticated/billing-overview.js</p>
 ```.lang-javascript
 Template.billingOverview.events({
   'click .cancel-subscription': function(){
@@ -647,16 +647,16 @@ Template.billingOverview.events({
 });
 ```
 
-Pretty straightforward. On click, we click the button we ask the customer to confirm their choice. If it's in the positive, we zip up to the server and call `stripeCancelSubscription`. This is just as neat and tidy as you'd expect. We're going to skip over looking at the server method here, as it looks identical to our other Stripe API calls. Again, the pattern is to call to the Stripe API and once we've received a response, update our local database.
+Pretty straightforward. On click, we ask the customer to confirm their choice. If it's in the positive, we zip up to the server and call `stripeCancelSubscription`. This is just as neat and tidy as you'd expect. We're going to skip over looking at the server method here, as it looks identical to our other Stripe API calls. Again, the pattern is to call to the Stripe API and once we've received a response, update our local database.
 
-There _is_ something to note again, though. Just like earlier when we were updating our user's plan, we want to set `currentUserPlan_` to null on success. Again, this helps us to gain back reactivity on this data as our UI helper `{{plan}}` relies on a non-reactive Method call. Setting this to `null` forces our UI helper to rerun as our Session variable is reactive. Tricky.
+There _is_ something to note again, though. Just like earlier when we were updating our user's plan, we want to set `currentUserPlan_` to `null` on success. Again, this helps us to gain back reactivity on this data as our UI helper `{{plan}}` relies on a non-reactive Method call. Setting this to `null` forces our UI helper to rerun as our Session variable is reactive. Tricky.
 
 So now that our user has canceled their subscription, what exactly does that _mean_ in our application? Let's take a look.
 
 #### Controlling Unsubscribed State
 We're showing the customer that their subscription has been canceled, but their account hasn't really changed at all. Ideally, we want to control their access to different areas of our application or prevent certain actions from being completed. To do this, we're going to have a little fun with [Iron Router's hooks](https://github.com/EventedMind/iron-router/blob/devel/Guide.md#hooks) to get the job done.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/routes/hooks.js</p>
 ```.lang-javascript
 checkSubscription = function(){
   var user        = Meteor.userId(),
@@ -697,7 +697,7 @@ Router.onBeforeAction(checkSubscription, {
 });
 ```
 
-Isn't this cool?! Maybe you don't understand what's happening. Let's step through it. First, we should define what Iron Router hook is...
+Isn't this cool?! Maybe you don't understand what's happening. Let's step through it. First, we should define what an Iron Router hook is...
 
 > A hook is just a function. Hooks provide a way to plug into the process of running a route, typically to customize rendering behavior or perform some business logic.
 >
@@ -706,9 +706,9 @@ via [Iron Router "Hooks" Documentation](https://github.com/EventedMind/iron-rout
 
 Our function, then, is designed to check our current customer's subscription status as well as the date their plan is set to end. Based on what we learn, we tell Iron Router either to keep rendering our route, or, to redirect to our `/billing/resubscribe` page (we'll cover this next). This should be fairly clear, however, we should make note of how the dating part works. The reason we check this is that when our customer cancels their subscription, we tell Stripe to do so _at period end_.
 
-In human speak, this means that although the customer's account has been marked as canceled, their subscription won't technically _end_ until the end of the current billing period (i.e. if I have a 30 day subscription and cancel on day 15, I still have 15 days left). Because we want our customers get the value they've paid for out of our app, we need to account for this fact. By checking the date in combination with the status, we can determine whether or not we've the _period end_ for their subscription, or if they're in the "canceled but not ended" window.
+In human speak, this means that although the customer's account has been marked as canceled, their subscription won't technically _end_ until the end of the current billing period (e.g. if I have a 30 day subscription and cancel on day 15, I still have 15 days left). Because we want our customers get the value they've paid for out of our app, we need to account for this fact. By checking the date in combination with the status, we can determine whether or not we've hit the _period end_ for their subscription, or if they're in the "canceled but not ended" window.
 
-To run our hook, we simply call to Iron Router's `onBeforeAction` method, passing our `checkSubscription` function. We also pass an array of pages that we _don't_ want to run the hook (i.e. don't block the customer from viewing). Now, whenever Iron Router runs a route, it will hit this `onBeforeAction` and if we find the customer isn't subscribed, block them from the page they were trying to access. It's so [_evil_](http://youtu.be/3ld3imEfpZU?t=8s).
+To run our hook, we simply call to Iron Router's `onBeforeAction` method, passing our `checkSubscription` function. We also pass an array of pages that we _don't_ want to run the hook (i.e. don't block the customer from viewing pages that will help them to get out of this block). Now, whenever Iron Router runs a route, it will hit this `onBeforeAction` and if we find the customer isn't subscribed, block them from the page they were trying to access. It's so [_evil_](http://youtu.be/3ld3imEfpZU?t=8s).
 
 Make sense? Killer! Let's take a look at [roping our customer's back in](http://media.giphy.com/media/8fE7VzqdcXvOw/giphy.gif) after they've canceled their account.
 
@@ -717,7 +717,7 @@ If you've signed up for any SaaS before, it's likely that you've used it heavily
 
 In order to do this in our own app, we've setup a route to a page called `/billing/resubscribe`. This page simply displays a form made up of two of our existing templates: `selectPlan` and `creditCard`. Let's take a quick look to see how it's laid out.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/client/views/authenticated/billing/billing-resubscribe.html</p>
 ```.lang-markup
 <template name="billingResubscribe">
   <div class="row">
@@ -747,7 +747,7 @@ In order to do this in our own app, we've setup a route to a page called `/billi
 
 Pretty awesome, right? Nothing too complex, but it gives us an easy template to send the user to when they want to resubscribe. What's nice about this is that not only are customers redirected to this template once their subscription expires, they can also access it after they've canceled, but _before_ their plan expires. This means that if they have a quick change of heart, they can resubscribe immediately (i.e. they don't have to wait for their original subscription to expire). Over in the controller, we just grab their data from the template and fire the appropriate methods:
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/clients/controllers/authenticated/billing-resubscribe.js</p>
 ```.lang-javascript
 Template.billingResubscribe.rendered = function(){
 [...]
@@ -812,13 +812,13 @@ Feeling the burn? Good. We've got one little (and really cool) thing to do befor
 Okay, yeah, whatever you say. But what _is_ a webhook? For our needs, a webhook is a message that Stripe will send us whenever anything happens on Stripe. So, for example, if a customer resubscribes to our applciation, that would _trigger_ a handful of "events" that Stripe would then send to a URL we specify. That URL (which is defined in our app as a server-side route) will then take what Stripe sends us and _do something_ with it. Before we jump into this, though, let's hop over to Stripe to see how to configure webhooks.
 
 #### Configuring Webhooks On Stripe
-The first step is to login to the Stripe dashboard and visit [the Webhooks Settings page](https://dashboard.stripe.com/account/webhooks). From here, click the "Add URL" button in the bottom left. A window should reveal itself with two options: URL and Mode. The URL will correspond to a server-side route in our app (e.g. `http://tmc-005-demo.meteor.com/webhooks/stripe`) that we'll define shortly. The _mode_ is simply which webhooks will be sent to this URL: events created in _test_ mode or _live_ mode?
+The first step is to login to the Stripe dashboard and visit [the Webhooks Settings page](https://dashboard.stripe.com/account/webhooks). From here, click the "Add URL" button in the bottom right. A window should reveal itself with two options: "URL" and "Mode." The URL will correspond to a server-side route in our app (e.g. `http://tmc-005-demo.meteor.com/webhooks/stripe`) that we'll define shortly. The _mode_ is simply which webhooks will be sent to this URL: events created in _test_ mode or _live_ mode.
 
 ![Configuring Webhooks on Stripe](http://cl.ly/image/0U1q3z1H3N0w/Image%202015-02-09%20at%2010.55.00%20PM.png)
 
 Once this is set, any time an event happens, Stripe will attempt to send a webhook to our specified URL. To make sure this actually works, let's take a look at setting up the route on the server.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/server/routes.js</p>
 ```.lang-javascript
 Router.route('/webhooks/stripe', function () {
   var request = this.request.body;
@@ -838,13 +838,13 @@ Router.route('/webhooks/stripe', function () {
 ```
 Really simple, but really powerful. Just like on the client, we call `Router.route()`, passing the _path_ of our server route `<current domain>/webhooks/stripe`. Before we look at the callback function we're passing, note that at the very end of our route declaration, we're setting the option `where` equal to `server`. By doing this we give our route ["full access to the NodeJS request and response objects."](https://github.com/EventedMind/iron-router/blob/devel/Guide.md#server-routing)
 
-Next, we pass a callback function with a few goodies. First, we take full advantage of our access to Node's `request` and `response` objects. Because we've done a bit of legwork and know that the bulk of the data we'll access will be in the `body` object of the data Stripe sends us, we just drill down to it by default.
+Next, we pass a callback function with a few goodies. First, we take full advantage of our access to Node's `request` and `response` objects. Because we've done a bit of legwork and know that the bulk of the data we'll access will be in the `body` object of the data Stripe sends us, we just drill down to it by default and assign it to a variable `request`.
 
-At the bottom of our function, we call to `this.response.statusCode` setting it to `200` (HTTP success code) and return a little message to Stripe via `this.response.end()`. What's the point of this? Imagine two robots sitting across from one another. One says "bleep blorp" and the other says nothing. What a jerk, Robot #2. By sending a `statusCode` back to Stripe (notice: _our server_ is responding to _Stripe's server_) along with a message, we're letting Stripe know that we heard it ok. This way the webhook succeeds and Stripe goes on its merry way.
+At the bottom of our function, we call to `this.response.statusCode` setting it to `200` ([HTTP success code](http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success)) and return a little message to Stripe via `this.response.end()`. What's the point of this? Imagine two robots sitting across from one another. One says "bleep blorp" and the other says nothing. What a jerk, Robot #2. By sending a `statusCode` back to Stripe (notice: _our server_ is responding to _Stripe's server_) along with a message, we're letting Stripe know that we heard it ok. This way the webhook succeeds and Stripe goes on its merry way. _Bleep blorp_, indeed.
 
-How about this `switch(request.type)`, though? That's the juicy part. This is where we actually _do something_ with the data Stripe is sending us. We use a `switch` function here because Stripe sends [a _crap load_ of webhooks](https://stripe.com/docs/api#event_types) by default (notice that in the screenshot above you can specify _which_ webhooks you want sent to you). What this is doing is looking at the value of `request.type` (equivalent to `this.request.body.type`) and then deeciding which function to fire. What's with this pattern?
+How about this `switch(request.type)`, though? That's the juicy part. This is where we actually _do something_ with the data Stripe is sending us. We use a `switch` function here because Stripe sends [a _crap load_ of webhooks](https://stripe.com/docs/api#event_types) by default (notice that in the screenshot above you can specify _which_ webhooks you want sent to you). What this is doing is looking at the value of `request.type` (equivalent to `this.request.body.type`) and then deciding which function to fire. What's with this pattern?
 
-Each webhook that we respond to from Stripe is responsible for some sort of action in our application. For our demo and as an example, we're going to update our customer's subscription information in our database whenever we receive the `customer.subscription.updated` event from Stripe. Simplifying this down to a switch that calls a remote function (i.e. in another file) keeps this part of our UI neat and tidy. Don't worry, we've got a message [waiting for us elsewhere](http://youtu.be/WKGRE7DlB8I?t=37s)!
+Each webhook that we respond to from Stripe is responsible for some sort of action in our application. For our demo and as an example, we're going to update our customer's subscription information in our database whenever we receive the `customer.subscription.updated` event from Stripe. Simplifying this down to a switch that calls a remote function (i.e. in another file) keeps this part of our code neat and tidy. Don't worry, we've got our messiness [waiting for us elsewhere](http://youtu.be/WKGRE7DlB8I?t=37s)!
 
 <div class="note">
   <h3>A quick note</h3>
@@ -854,7 +854,7 @@ Each webhook that we respond to from Stripe is responsible for some sort of acti
 ### Subscription Updated
 To keep things a little tidier in our server-side route, we've set up a separate file called `/server/stripe-webhook-functions.js`. Similar to our method files, this is just a collection of functions that store some more complicated functionality. First up, we want to update our customer's information in the database when we receive the `customer.subscription.updated` event from Stripe. Here's how it looks:
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/server/stripe-webhook-functions.js</p>
 ```.lang-javascript
 stripeUpdateSubscription = function(request){
   var getUser = Meteor.users.findOne({"customerId": request.customer}, {fields: {"_id": 1}});
@@ -890,7 +890,7 @@ Our only job, then, is to wait until Stripe sends us a webhook, or "hey, I just 
 #### Invoice Payment Succeeded
 Last but not least is the `invoice.payment_succeeded` event. This one is pretty simple. It's sole purpose is to insert an invoice for our customer into the database when Stripe has successfully marked it as paid.
 
-<p class="block-header">/path/to/file</p>
+<p class="block-header">/server/stripe-webhook-functions.js</p>
 ```.lang-javascript
 stripeCreateInvoice = function(request){
   var getUser = Meteor.users.findOne({"customerId": request.customer}, {fields: {"_id": 1, "emails.address": 1}});
