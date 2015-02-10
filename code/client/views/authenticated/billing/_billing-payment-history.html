@@ -4,7 +4,7 @@
       <h3 class="panel-title">Payment History</h3>
     </div>
     <div class="panel-body">
-      {{#with invoices}}
+      {{#if hasInvoices}}
       <table class="table table-bordered">
         <thead>
           <tr>
@@ -28,8 +28,8 @@
         </tbody>
       </table>
       {{else}}
-        <p class="alert alert-info">You don't have any invoices yet!</p>
-      {{/with}}
+        <p class="alert alert-info" style="margin: 0;">You don't have any invoices yet!</p>
+      {{/if}}
     </div>
   </div>
 </template>

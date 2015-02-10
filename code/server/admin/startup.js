@@ -26,6 +26,8 @@ SERVER_AUTH_TOKEN = Random.secret();
 
 // Create an array of user accounts.
 var users = [
+// Note: our demo user here is purely for mock purposes and does not correspond
+// to a real customer on Stripe.
   {
     name: "Andy Warhol",
     email: "andy@warhol.com",
