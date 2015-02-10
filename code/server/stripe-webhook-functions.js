@@ -36,25 +36,31 @@ stripeCreateInvoice = function(request){
   if (getUser){
     // Cache the invoice item from Stripe.
     var invoiceItem = request.lines.data[0];
+    var totalAmount = request.total;
 
-    // Setup an invoice object.
-    var invoice = {
-      owner: getUser._id,
-      email: getUser.emails[0].address,
-      date: request.date,
-      planId: invoiceItem.plan.id,
-      ends: invoiceItem.period.end,
-      amount: invoiceItem.plan.amount,
-      transactionId: Random.hexString(10)
-    }
-
-    // Perform our insert. Note: we're doing this here because we'll only ever
-    // add invoices via this function. Since we're not sharing it with another
-    // operation in the app, we can just isolate it here.
-    Invoices.insert(invoice, function(error, response){
-      if (error){
-        console.log(error);
+    // Make sure that our invoice is greater than $0. We do this because Stripe
+    // generates an invoice for our customer's trial (for $0), even though they
+    // technically haven't *paid* anything.
+    if (totalAmount > 0) {
+      // Setup an invoice object.
+      var invoice = {
+        owner: getUser._id,
+        email: getUser.emails[0].address,
+        date: request.date,
+        planId: invoiceItem.plan.id,
+        ends: invoiceItem.period.end,
+        amount: totalAmount,
+        transactionId: Random.hexString(10)
       }
-    });
+
+      // Perform our insert. Note: we're doing this here because we'll only ever
+      // add invoices via this function. Since we're not sharing it with another
+      // operation in the app, we can just isolate it here.
+      Invoices.insert(invoice, function(error, response){
+        if (error){
+          console.log(error);
+        }
+      });
+    }
   }
 }

@@ -897,27 +897,33 @@ stripeCreateInvoice = function(request){
 
   if (getUser){
     var invoiceItem = request.lines.data[0];
+    var totalAmount = request.total;
 
-    var invoice = {
-      owner: getUser._id,
-      email: getUser.emails[0].address,
-      date: request.date,
-      planId: invoiceItem.plan.id,
-      ends: invoiceItem.period.end,
-      amount: invoiceItem.plan.amount,
-      transactionId: Random.hexString(10)
-    }
-
-    Invoices.insert(invoice, function(error, response){
-      if (error){
-        console.log(error);
+    if (totalAmount > 0) {
+      // Setup an invoice object.
+      var invoice = {
+        owner: getUser._id,
+        email: getUser.emails[0].address,
+        date: request.date,
+        planId: invoiceItem.plan.id,
+        ends: invoiceItem.period.end,
+        amount: totalAmount,
+        transactionId: Random.hexString(10)
       }
-    });
+
+      Invoices.insert(invoice, function(error, response){
+        if (error){
+          console.log(error);
+        }
+      });
+    }
   }
 }
 ```
 
-Fairly similar to our `stripeUpdateSubscription` function. First, we confirm that we have the correct customer and then build an object to insert as the invoice. Once it's ready, we go ahead and pop it into the database! Keep in mind, this is deceptively simple by design. Unlike the majority of our other methods and functions, `stripeCreateInvoice` will only ever be called by our webhook. This means that a direct write to the database is perfectly economical because we won't be needing to share the insert method with any other operations in our application. Cool? Cool.
+Fairly similar to our `stripeUpdateSubscription` function. First, we confirm that we have the correct customer. Next, we make sure that our invoice's total is greater than $0. Why? Well, when our customer starts their trial, Stripe generates an invoice for $0. Doing this check makes sure that an unnecessary invoice doesn't show up in their dashboard. This is one of those behaviors that you may need to tweak for your own app, so make sure to play with it to get it right.
+
+Once we're sure our invoice is for more than nothing, we build an object to insert as the invoice. Once it's ready, we go ahead and pop it into the database! Keep in mind, this is deceptively simple by design. Unlike the majority of our other methods and functions, `stripeCreateInvoice` will only ever be called by our webhook. This means that a direct write to the database is perfectly economical because we won't be needing to share the insert method with any other operations in our application. Cool? Cool.
 
 #### Additional Webhooks
 As we mentioned above, Stripe supports a lot of webhooks. Like really, a lot. About ~49 or so. The good news is that you don't have to support all of them. Rather, it's a good practice to consider what things you may want to do with webhooks. The reason we've limited our example here to two (aside from being sleepy) is that those are the only two webhooks we needed to demonstrate. Your own application may need all 49. It's unlikely, but don't just take what you see above as gospel. Do your research!
