@@ -24,6 +24,21 @@ Template.creditCard.helpers({
   }
 });
 
+Template.creditCardDetails.helpers({
+  isBilling: function(){
+    var instance = Template.instance();
+    if ( instance.data.search("billing") > -1 ) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+  
+  addNewCard: function(){
+    return Session.get('addingNewCreditCard');
+  }
+});
+
 Template.creditCard.events({
 
   'click .add-new-card': function(){

@@ -52,8 +52,17 @@
     <label>Exp. Yr.</label>
     <input type="text" name="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
   </div>
-  <div class="col-xs-4">
-    <label>CVC</label>
-    <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
-  </div>
+  {{#if isBilling}}
+    {{#if addNewCard}}
+      <div class="col-xs-4">
+        <label>CVC</label>
+        <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
+      </div>
+    {{/if}}
+  {{else}}
+    <div class="col-xs-4">
+      <label>CVC</label>
+      <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
+    </div>
+  {{/if}}
 </template>

@@ -108,7 +108,8 @@ Meteor.methods({
       Meteor.users.update(update.user, {
         $set: {
           "subscription.status": update.subscription.status,
-          "subscription.ends": update.subscription.ends
+          "subscription.ends": update.subscription.ends,
+          "subscription.payment.nextPaymentDue": update.subscription.ends
         }
       }, function(error, response){
         if (error) {
