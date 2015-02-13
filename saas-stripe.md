@@ -51,7 +51,7 @@ Now that we have Stripe setup, we need to focus on configuration data. First, in
 </div>
 
 ##### Stripe API Keys
-The first thing we want to do is to add our Stripe keys. Stripe gives us four keys total: `sk_test`, `pk_test`, `sk_live`, and `pk_live`. If the labeling isn't clear, there are two sets of keys: _test_ and _live_. The difference is what you'd expect: the test keys are used for _testing_ our application, and the live keys are meant for _production_. Because we're just noodling around, we'll only be making use of our test keys in this recipe. However, we'll showcase flipping over your keys for when you go into production in part two.
+The first thing we want to do is to add our Stripe keys. Stripe gives us four keys total: `sk_test`, `pk_test`, `sk_live`, and `pk_live`. If the labeling isn't clear, there are two sets of keys: _test_ and _live_. The difference is what you'd expect: the test keys are used for _testing_ our application, and the live keys are meant for _production_.
 
 <p class="block-header">/settings.json</p>
 ```.lang-javascript
@@ -895,7 +895,7 @@ Note that now on the client, we can access our plan information via the `{{plan}
 
 #### Displaying the User's Plan on the Billing Screen
 
-Home stretch! There's just one more thing that we need to do before we leave the rest to part two. Over in our user's `/billing` view (specifically our `billingOverview` template), we want to display their plan information so they can see the status of their account and decide whether or not to upgrade/downgrade.
+Home stretch! There's just one more thing that we need to do before we leave the rest to [part two](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2). Over in our user's `/billing` view (specifically our `billingOverview` template), we want to display their plan information so they can see the status of their account and decide whether or not to upgrade/downgrade.
 
 <p class="block-header">/client/views/authenticated/billing/_billing-overview.html</p>
 ```.lang-markup
@@ -954,7 +954,7 @@ Last but not least, just beneath this block we display our user's payment inform
 Just like before, thanks to our `{{plan}}` helper we can call this information up toot sweet. Now, our user can see all of their current plan information on screen! Not exciting to you? Consider this is how they'll decide whether or not they should keep their subscription active. Yeah. That's what pays for your dog food, bro. Don't hate.
 
 #### That's it!
-We did it! Well, at least part of it. This concludes part 1 of 2. It was a lot of work, so give yourself a pat on the back.
+We did it! Well, at least part of it. This concludes part 1 of [2](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2). It was a lot of work, so give yourself a pat on the back.
 
 ![Zack and Slater patting themselves on the back](http://media.giphy.com/media/9Q249Qsl5cfLi/giphy.gif)
 
@@ -965,3 +965,7 @@ Very cool stuff. In this recipe we learned how to sign users up for our app, cre
 We'll take a look at helping our customer update their plan information, cancel their subscription (nooo!), manage their credit card, and send invoices when our plan renews! Get excited. When we're done, we'll have a full-blown payments system using Stripe.
 
 Until next time!
+
+<div class="note">
+  <p>Part 2 is now live! <a href="http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2/">Check it out</a>.</p>
+</div>
