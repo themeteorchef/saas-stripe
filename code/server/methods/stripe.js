@@ -21,38 +21,6 @@ var Fiber  = Npm.require('fibers');
 
 Meteor.methods({
 
-  stripeCreateToken: function(card){
-    // Check our argument against the expected pattern. This is especially important
-    // here because we're dealing with sensitive customer information.
-    check(card, {
-      number: String,
-      exp_month: String,
-      exp_year: String,
-      cvc: String
-    });
-
-    // Because Stripe's API is asynchronous (meaning it doesn't block our function
-    // from running once it's started), we need to make use of the Fibers/Future
-    // library. This allows us to create a return object that "waits" for us to
-    // return a value to it.
-    var stripeToken = new Future();
-
-    // If all is well, call to the Stripe API to create our token!
-    Stripe.tokens.create({
-      card: card // Pass our card object to the "card" parameter.
-    }, function(error, token){
-      if (error){
-        // If we get an error, return it to our "waiting" return object.
-        stripeToken.return(error);
-      } else {
-        // If we get a token, return it to our "waiting" return object.
-        stripeToken.return(token.id);
-      }
-    });
-
-    return stripeToken.wait();
-  },
-
   stripeCreateCustomer: function(card, email){
     // Check our arguments against their expected patterns. This is especially
     // important here because we're dealing with sensitive customer information.
@@ -74,8 +42,8 @@ Meteor.methods({
     // If all is well, call to the Stripe API to create our customer!
     // Note: here, we're passing a card as well. Why? Because we're only creating
     // customers when they sign up for our app, Stripe gives us the option to pass
-    // card data here, too, automating the token creation process. We could
-    // technically run the stripeCreateToken method above and pass the token to
+    // card data here, automating the token creation process. We could
+    // run a separate stripeCreateToken method and pass the token to
     // this method, but this saves us a step. Efficient!
     Stripe.customers.create({
       card: card,
