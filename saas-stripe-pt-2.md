@@ -12,6 +12,9 @@ Because we'll be doing a bit of work in the UI, we'll use [themeteorchef:bert](h
   <p>This recipe relies on several other packages that come as part of <a href="https://github.com/themeteorchef/base">Base</a>, the boilerplate kit used here on The Meteor Chef. The packages listed above are merely additions to the packages that are included by default in the kit. Make sure to reference the <a href="https://github.com/themeteorchef/base#packages-included">Packages Included</a> list for Base to ensure you have fulfilled all of the dependencies. Additional packages used for this recipe can be found in the "Getting Started" section of <a href="http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1">part one</a> of this recipe.</p>  
 </div>
 
+### Starting the Server
+Don't forget that because we added a settings file `settings.json` [during part 1](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1), we need to start up our server with the command `meteor --settings settings.json`. Again, this command tells Meteor about our settings file. Without this, we'll see errors about Meteor not being able to locate our Stripe token.
+
 ### Changing Plans
 When we left off in part one, we were focused on wiring up the customer's plan information to the billing overview page. With all of our static data in place, now we need to focus on making things a bit more dynamic. To get started, we need to make it possible for our customers to change their current plan.
 
