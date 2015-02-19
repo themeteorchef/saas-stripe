@@ -45,6 +45,8 @@ Now that we have Stripe setup, we need to focus on configuration data. First, in
 
 [A little known feature](http://docs.meteor.com/#/full/meteor_settings) of Meteor is that you can define a global configuration file in your project's root: `settings.json`. This allows you to store both public _and_ private information that you'd like accessible throughout your application. By default, anything that we put into this file is _private_ and only accessible on the server. In our case, we'll only need private keys as all of work will be done on the server. To get started, create a file in your project root called `settings.json` and open it up.
 
+**Note: this will require you to start your Meteor server using the command** `meteor --settings settings.json`. This tells Meteor to look for a settings file when it starts in the location specified (in our case, we're looking for `settings.json` in our application's root). 
+
 <div class="note">
   <h3>A quick note</h3>
   <p>In order to complete the next step, you'll need to <a href="https://dashboard.stripe.com/register">signup for an account with Stripe</a>. This will allow you to generate the key's we'll explain below. To get the keys, signup, login to your dashboard, and open up the settings modal. From here, <a href="https://dashboard.stripe.com/account/apikeys">select the "API Keys" tab</a> at the top. From there: copy, paste, money.</p>  
