@@ -43,13 +43,13 @@ Here, we define a single key set to the title of the package on the NPM reposito
 #### Defining Settings.json
 Now that we have Stripe setup, we need to focus on configuration data. First, in order to successfully access the Stripe API, we need to set a handful of "keys" that we can use to have Stripe acknowledge us. We need these because they're a unique identifier that Stripe will recognize and associate with our Stripe account. To do this, we'll make use of Meteor's `settings.json` file.
 
-[A little known feature](http://docs.meteor.com/#/full/meteor_settings) of Meteor is that you can define a global configuration file in your project's root: `settings.json`. This allows you to store both public _and_ private information that you'd like accessible throughout your application. By default, anything that we put into this file is _private_ and only accessible on the server. In our case, we'll only need private keys as all of work will be done on the server. To get started, create a file in your project root called `settings.json` and open it up.
+[A little-known feature](http://docs.meteor.com/#/full/meteor_settings) of Meteor is that you can define a global configuration file in your project's root: `settings.json`. This allows you to store both public _and_ private information that you'd like accessible throughout your application. By default, anything that we put into this file is _private_ and only accessible on the server. In our case, we'll only need private keys as all work will be done on the server. To get started, create a file in your project root called `settings.json` and open it up.
 
 **Note: this will require you to start your Meteor server using the command** `meteor --settings settings.json`. This tells Meteor to look for a settings file when it starts in the location specified (in our case, we're looking for `settings.json` in our application's root). 
 
 <div class="note">
   <h3>A quick note</h3>
-  <p>In order to complete the next step, you'll need to <a href="https://dashboard.stripe.com/register">signup for an account with Stripe</a>. This will allow you to generate the key's we'll explain below. To get the keys, signup, login to your dashboard, and open up the settings modal. From here, <a href="https://dashboard.stripe.com/account/apikeys">select the "API Keys" tab</a> at the top. From there: copy, paste, money.</p>  
+  <p>In order to complete the next step, you'll need to <a href="https://dashboard.stripe.com/register">signup for an account with Stripe</a>. This will allow you to generate the keys we'll explain below. To get the keys, sign up, log in to your dashboard, and open up the settings modal. From here, <a href="https://dashboard.stripe.com/account/apikeys">select the "API Keys" tab</a> at the top. From there: copy, paste, money.</p>  
 </div>
 
 ##### Stripe API Keys
@@ -229,7 +229,7 @@ Template.selectPlan.events({
 });
 ```
 
-Next up is a two parter: selecting plans. By default, we want to ensure that we're showing a plan as selected. To help us include the selected plan in our form data, if you look back up at the `selectPlans` template above, you'll notice we have a hidden `radio` input being assigned to each option. This allows us to look at our signup form to get the "checked" value. We hide it on the template as a UX touch. In our controller above, we first handle checking a "default" option when the template is rendered. Here we're just picking the first item/plan in our list, but if you're smart, you'll set this up to automatically select the most popular option based on your [metrics](http://www.quickmeme.com/img/5d/5d8664cf92e4ce604998ebc905667d3186818aee1c8786b9cfd51712eead636e.jpg).
+Next up is a two-parter: selecting plans. By default, we want to ensure that we're showing a plan as selected. To help us include the selected plan in our form data, if you look back at the `selectPlans` template above, you'll notice we have a hidden `radio` input being assigned to each option. This allows us to look at our signup form to get the "checked" value. We hide it on the template as a UX touch. In our controller above, we first handle checking a "default" option when the template is rendered. Here we're just picking the first item/plan in our list, but if you're smart, you'll set this up to automatically select the most popular option based on your [metrics](http://www.quickmeme.com/img/5d/5d8664cf92e4ce604998ebc905667d3186818aee1c8786b9cfd51712eead636e.jpg).
 
 Just below that, we want to handle the event for "checking" our selected option. This is admittedly a bit tricky. Because we're watching for a click event on our `.list-group-item` element, we need to "find" our radio button and check it whenever its parent is clicked. Confused? To help us out, we can use a little jQuery-fu to find the radio button and mark it as checked `parent.find('input[type="radio"]').prop("checked", true);`. Wonderful. This is one of those "more than one way to skin a cat" type of problems, so make sure to play with it!
 
@@ -268,7 +268,7 @@ Pretty straightforward. But there's something to note. Here, we're making use of
 
 >  Note how input fields representing sensitive card data (number, CVC, expiration month and year) do not have a "name" attribute. This prevents them from hitting your server when the form is submitted.
 
-The reason _we're_ doing this is that we want to validate our credit card form later, which requires the use of `name` attributes. To prevent this information from "hitting the server" like the quote above suggests, we're preventing the default method used to handle the form in our event map:
+The reason we _are_ doing this is that we want to validate our credit card form later, which requires the use of `name` attributes. To prevent this information from "hitting the server" like the quote above suggests, we're preventing the default method used to handle the form in our event map:
 
 <p class="block-header">/client/controllers/public/signup.js</p>
 ```.lang-javascript
