@@ -45,7 +45,7 @@ Now that we have Stripe setup, we need to focus on configuration data. First, in
 
 [A little known feature](http://docs.meteor.com/#/full/meteor_settings) of Meteor is that you can define a global configuration file in your project's root: `settings.json`. This allows you to store both public _and_ private information that you'd like accessible throughout your application. By default, anything that we put into this file is _private_ and only accessible on the server. In our case, we'll only need private keys as all of work will be done on the server. To get started, create a file in your project root called `settings.json` and open it up.
 
-**Note: this will require you to start your Meteor server using the command** `meteor --settings settings.json`. This tells Meteor to look for a settings file when it starts in the location specified (in our case, we're looking for `settings.json` in our application's root). 
+**Note: this will require you to start your Meteor server using the command** `meteor --settings settings.json`. This tells Meteor to look for a settings file when it starts in the location specified (in our case, we're looking for `settings.json` in our application's root).
 
 <div class="note">
   <h3>A quick note</h3>
@@ -653,7 +653,7 @@ After this, in our `else`, we're looking for _another_ error. [What, what, what]
 
 Time to login our user! This is actually pretty cool. Because we technically already "know" our user's email address and password (remember, these were defined earlier in our `customer` object at the top of our `submitHandler`), we can just "reuse" these to log them in. We can get away with this because at this point, we know they have an account in our database with these values. Sneaky!
 
-Finally, in the callback of `loginWithPassword`, we test for an error _one more time_ and if all is well, redirect the user to the `/lists` view where they can see their current todo lists. We also reset the button again for good measure. Woah! Our signup flow is complete. At this point, we've succesfully signed our user up for an account with a trial on Stripe. [High fives all around](http://media2.giphy.com/media/DohrJX1h2W5RC/giphy.gif)!
+Finally, in the callback of `loginWithPassword`, we test for an error _one more time_ and if all is well, redirect the user to the `/lists` view where they can see their current todo lists. We also reset the button again for good measure. Woah! Our signup flow is complete. At this point, we've successfully signed our user up for an account with a trial on Stripe. [High fives all around](http://media2.giphy.com/media/DohrJX1h2W5RC/giphy.gif)!
 
 <div class="note">
   <h3>A quick note</h3>
@@ -661,7 +661,7 @@ Finally, in the callback of `loginWithPassword`, we test for an error _one more 
 </div>
 
 ### Managing Usage
-In our SaaS app, we're offerring todo lists to customers in different tiers (this is what we mapped out in our plan data above). Because of this, we'll need to have some sort of mechanism for keeping track of how many lists a user has created and check that against the _limits_ of their plan. So, if one of our customers, Jane Windex, signs up for the "small" plan, we only want her to have the ability to create five todo lists. If she tries to create more than this, we want to block her ability to do so and suggest that she upgrade her account. How do we do that?
+In our SaaS app, we're offering todo lists to customers in different tiers (this is what we mapped out in our plan data above). Because of this, we'll need to have some sort of mechanism for keeping track of how many lists a user has created and check that against the _limits_ of their plan. So, if one of our customers, Jane Windex, signs up for the "small" plan, we only want her to have the ability to create five todo lists. If she tries to create more than this, we want to block her ability to do so and suggest that she upgrade her account. How do we do that?
 
 ##### Using Template Helpers to Block Visibility
 Because we have the power of reactivity with Meteor, we can do some really cool stuff using Spacebars templates. In our case, we can wrap the parts of our interface that we want to display _conditionally_. For example, if a user has a "Small" plan and they've used up 5 of their 5 available lists, we want to _hide_ the UI that allows them to add more.
@@ -744,7 +744,7 @@ This one is interesting. We want our method to do two things: get the current us
 
 The reason we do this here is that it avoids having to expose the user's subscription information on the client. Our server has access to all of a user's data, which means we can have it do the messy checking work without mucking up our client-side controller. This is one of those stylistic things that, while not _entirely_ necessary, helps to keep your code a little bit cleaner.
 
-There's one thing above that may not be entirely clear. Above we're making use of the `_.find()` method given to us by the `underscore` package. This function is really handy. First, we pass our `availablePlans` array which is equal to the list of plans we've defined in our `settings.json` file. Next, for each plan, we compare the plan's `name` field to our user's `plan.name` field. This essentialy "plucks" the plan that our user is signed up for out of the array and sets it euqal to our `currentPlan` variable. Cool, right?
+There's one thing above that may not be entirely clear. Above we're making use of the `_.find()` method given to us by the `underscore` package. This function is really handy. First, we pass our `availablePlans` array which is equal to the list of plans we've defined in our `settings.json` file. Next, for each plan, we compare the plan's `name` field to our user's `plan.name` field. This essentially "plucks" the plan that our user is signed up for out of the array and sets it equal to our `currentPlan` variable. Cool, right?
 
 <p class="block-header">/client/controllers/authenticated/todo-lists.js</p>
 ```.lang-javascript
