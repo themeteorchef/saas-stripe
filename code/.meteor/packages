@@ -16,9 +16,9 @@ themeteorchef:jquery-validation
 particle4dev:sass@0.3.0
 twbs:bootstrap
 random
-meteorhacks:npm
 
 
 npm-container
 momentjs:moment
 themeteorchef:bert
+mrgalaxy:stripe

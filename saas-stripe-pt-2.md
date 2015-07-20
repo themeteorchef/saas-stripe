@@ -12,6 +12,9 @@ Because we'll be doing a bit of work in the UI, we'll use [themeteorchef:bert](h
   <p>This recipe relies on several other packages that come as part of <a href="https://github.com/themeteorchef/base">Base</a>, the boilerplate kit used here on The Meteor Chef. The packages listed above are merely additions to the packages that are included by default in the kit. Make sure to reference the <a href="https://github.com/themeteorchef/base#packages-included">Packages Included</a> list for Base to ensure you have fulfilled all of the dependencies. Additional packages used for this recipe can be found in the "Getting Started" section of <a href="http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1">part one</a> of this recipe.</p>  
 </div>
 
+### Starting the Server
+Don't forget that because we added a settings file `settings.json` [during part 1](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1), we need to start up our server with the command `meteor --settings settings.json`. Again, this command tells Meteor about our settings file. Without this, we'll see errors about Meteor not being able to locate our Stripe token.
+
 ### Changing Plans
 When we left off in part one, we were focused on wiring up the customer's plan information to the billing overview page. With all of our static data in place, now we need to focus on making things a bit more dynamic. To get started, we need to make it possible for our customers to change their current plan.
 
@@ -361,7 +364,7 @@ A few things going on here. First, our `isBilling` helper helps us to find out i
 ```.lang-markup
 {{#if isBilling}}
   {{#if addNewCard}}
-    <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+    <input type="text" data-stripe="cardNumber" class="form-control card-number" placeholder="Card Number">
     <p><a class="cancel-new-card" href="#">Cancel</a></p>
   {{else}}
     {{#if plan.subscription.payment.card}}
@@ -370,7 +373,7 @@ A few things going on here. First, our `isBilling` helper helps us to find out i
     {{/if}}
   {{/if}}
 {{else}}
-  <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+  <input type="text" data-stripe="cardNumber" class="form-control card-number" placeholder="Card Number">
 {{/if}}
 [...]
 {{#if isBilling}}
@@ -399,32 +402,34 @@ Our last helper, here, `addNewCard` is also used to toggle state. We simply chec
 
 #### Adding a New Card
 
-Let's look at our controller for updating or adding a new credit card. This one is sort of a doozie because we're looking to determine whether the customer is _updating_ their existing card, or _adding_ a new card entirely. Our focus will be on the `rendered` callback of our `billingCard` template.
+Let's look at our controller for updating or adding a new credit card. This one is sort of a doozie because we're looking to determine whether the customer is _updating_ their existing card, or _adding_ a new card entirely. Our focus will be on the `submit form` event handler in our `events` callback of our `billingCard` template.
 
 <p class="block-header">/client/controllers/authenticated/billing-card.js</p>
+
 ```.lang-javascript
-Template.billingCard.rendered = function(){
-  $('#billing-card').validate({
-    [...]
-    submitHandler: function(){
-      var currentUser      = Meteor.userId();
-      var updateCardButton = $(".update-card").button('loading');
-      var newCard          = Session.get('addingNewCreditCard');
+Template.billingCard.events({
+  'submit form': function( e ){
+    e.preventDefault();
 
-      if (newCard){
-        var card = {
-          number: $('[name="cardNumber"]').val(),
-          exp_month: $('[name="expMo"]').val(),
-          exp_year: $('[name="expYr"]').val(),
-          cvc: $('[name="cvc"]').val()
-        }
+    var currentUser      = Meteor.userId();
+    var updateCardButton = $(".update-card").button('loading');
 
-        Meteor.call('stripeSwapCard', card, function(error, response){
+    var newCard = Session.get('addingNewCreditCard');
+    if (newCard){
+      STRIPE.getToken( '#billing-card', {
+        number: $('[data-stripe="cardNumber"]').val(),
+        exp_month: $('[data-stripe="expMo"]').val(),
+        exp_year: $('[data-stripe="expYr"]').val(),
+        cvc: $('[data-stripe="cvc"]').val()
+      }, function() {
+        var token = $( "#billing-card [name='stripeToken']" ).val();
+
+        Meteor.call('stripeSwapCard', token, function(error, response){
           if (error){
             Bert.alert(error.reason.message, 'danger');
             updateCardButton.button('reset');
           } else {
-            if (response.rawType != undefined && response.rawType == "card_error"){
+            if (response.rawType !== undefined && response.rawType == "card_error"){
               Bert.alert(response.message, "danger");
               updateCardButton.button('reset');
             } else {
@@ -435,25 +440,20 @@ Template.billingCard.rendered = function(){
             }
           }
         });
-      } else {
-        [...]
-      }
+      });
+    } else {
+      [...]
     }
-  });
-}
+  }
+});
 ```
 
 This should look somewhat familiar. Just like with our signup template in part one, we're calling a few methods. The difference this time, is that we're looking at our `addingNewCreditCard` Session variable to determine _which_ method to call. Here, we're looking at our first method call `stripeSwapCard` that will be used when the customer is adding a new card. Let's jump up to the server to see this fella in action.
 
 <p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
-stripeSwapCard: function(card){
-  check(card, {
-    number: String,
-    exp_month: String,
-    exp_year: String,
-    cvc: String
-  });
+stripeSwapCard: function(token){
+  check(token, String);
 
   var stripeSwapCard = new Future();
 
@@ -461,14 +461,14 @@ stripeSwapCard: function(card){
   var getUser = Meteor.users.findOne({"_id": user}, {fields: {"customerId": 1}});
 
   Stripe.customers.update(getUser.customerId, {
-    card: card
+    source: token
   }, function(error, customer){
     if (error) {
       stripeSwapCard.return(error);
     } else {
       var card = {
-        lastFour: customer.cards.data[0].last4,
-        type: customer.cards.data[0].brand
+        lastFour: customer.sources.data[0].last4,
+        type: customer.sources.data[0].brand
       }
       Fiber(function(){
         var update = {
@@ -494,7 +494,7 @@ This pattern should look pretty familiar by now. Here, we do a quick `check()` o
 
 Yep! There's a good reason for keeping this verbose. It's important to understand _how_ the data is moving through Stripe and into our database. We could tackle this pattern with a number of different solutions (e.g. skipping method calls and using plain server-side functions). By doing it this way in the demo, though, we can see each explicit step taken to produce the end result we want. Integrating third-party systems like Stripe, while easier than some concepts, can still introduce a lot of repetitive patterns. The challenge for you is to apply your programming knowledge to refactor code like this to be more performant or fitting for your application.
 
-We're going to skip following the trail over to the `updateUserCard` method and instead hop back to the client assuming we've receive a positive response.
+We're going to skip following the trail over to the `updateUserCard` method and instead hop back to the client assuming we've received a positive response.
 
 <p class="block-header">/client/controllers/authenticated/billing-card.js</p>
 ```.lang-javascript
@@ -749,51 +749,55 @@ Pretty awesome, right? Nothing too complex, but it gives us an easy template to 
 
 <p class="block-header">/clients/controllers/authenticated/billing-resubscribe.js</p>
 ```.lang-javascript
-Template.billingResubscribe.rendered = function(){
-[...]
-submitHandler: function(){
-  var selectedPlan        = $('[name="selectPlan"]:checked').val(),
-      addingNewCreditCard = Session.get('addingNewCreditCard'),
-      resubscribeButton   = $(".resubscribe").button('loading');
+Template.billingResubscribe.events({
+  'submit form': function(e){
+    e.preventDefault();
 
-  var updateSubscription = function(plan){
-    Meteor.call("stripeUpdateSubscription", plan, function(error, response){
-      if (error){
-        resubscribeButton.button("reset");
-        Bert.alert(error.message, "danger");
-      } else {
-        resubscribeButton.button("reset");
-        Bert.alert("Successfully resubscribed. Welcome back!", "success");
-        Router.go('/billing');
-      }
-    });
-  }
+    var selectedPlan        = $('[name="selectPlan"]:checked').val(),
+        addingNewCreditCard = Session.get('addingNewCreditCard'),
+        resubscribeButton   = $(".resubscribe").button('loading');
 
-  if (addingNewCreditCard){
-    var card = {
-      number: $('[name="cardNumber"]').val(),
-      exp_month: $('[name="expMo"]').val(),
-      exp_year: $('[name="expYr"]').val(),
-      cvc: $('[name="cvc"]').val()
+    var updateSubscription = function(plan){
+      Meteor.call("stripeUpdateSubscription", plan, function(error, response){
+        if (error){
+          resubscribeButton.button("reset");
+          Bert.alert(error.message, "danger");
+        } else {
+          resubscribeButton.button("reset");
+          Bert.alert("Successfully resubscribed. Welcome back!", "success");
+          Router.go('/billing');
+        }
+      });
     }
 
-    Meteor.call("stripeSwapCard", card, function(error, response){
-      if (error){
-        resubscribeButton.button("reset");
-        Bert.alert(error.message, "danger");
-      } else {
-        updateSubscription(selectedPlan);
-      }
-    });
-  } else {
-    updateSubscription(selectedPlan);
+    if (addingNewCreditCard){
+      STRIPE.getToken( '#resubscribe', {
+        number: $('[data-stripe="cardNumber"]').val(),
+        exp_month: $('[data-stripe="expMo"]').val(),
+        exp_year: $('[data-stripe="expYr"]').val(),
+        cvc: $('[data-stripe="cvc"]').val()
+      }, function() {
+        var token = $( "#resubscribe [name='stripeToken']" ).val();
+
+        Meteor.call("stripeSwapCard", token, function(error, response){
+          if (error){
+            resubscribeButton.button("reset");
+            Bert.alert(error.message, "danger");
+          } else {
+            updateSubscription(selectedPlan);
+          }
+        });
+      });
+    } else {
+      updateSubscription(selectedPlan);
+    }
   }
-}
+});
 ```
 
-This should all be familiar by now. In the `submitHandler` callback of our form's validation, we start by checking whether or not the user is resubscribing with a _new_ credit card (e.g. they unsubscribed for a year and during that time, were issued a new card). If they _are_ adding a new card, we grab the appropriate data from our template and call up our `stripeSwapCard` method from earlier. Double time!
+This should all be familiar by now. In our `submit form` event handler, we start by checking whether or not the user is resubscribing with a _new_ credit card (e.g. they unsubscribed for a year and during that time, were issued a new card). If they _are_ adding a new card, we grab the appropriate data from our template and call up our `stripeSwapCard` method from earlier (first passing our user's card data over to our `STRIPE.getToken()` method).
 
-If they're _not_ adding a new card, we just call to our `stripeUpdateSubscription` method from earlier. Double, double time! The only big thing to note, here, is that we've wrapped our call to `stripeUpdateSubscription` in another function called `updateSubscription`. Why? Because irrespective of _which_ path the customer chooses here, we will eventually need to update their subscription per their choices. Placing this in a function helps us to prevent repeating a bunch of code! [Nerdgasm](http://youtu.be/2FW43MV_6d0?t=1h13m53s)!
+If they're _not_ adding a new card, we just call to our `stripeUpdateSubscription` method from earlier. The only big thing to note, here, is that we've wrapped our call to `stripeUpdateSubscription` in another function called `updateSubscription`. Why? Because irrespective of _which_ path the customer chooses here, we will eventually need to update their subscription per their choices. Placing this in a function helps us to prevent repeating a bunch of code! [Nerdgasm](http://youtu.be/2FW43MV_6d0?t=1h13m53s)!
 
 Again, since we're reusing code from earlier, we're going to go ahead and skip our usual time warp up to the server. One step left: webhooks!
 

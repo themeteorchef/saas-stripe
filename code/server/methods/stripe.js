@@ -15,54 +15,16 @@
 // generated associated with your test and/or live keys. So, you can still do
 // tests locally and see that data in the dashboard before going into production.
 var secret = Meteor.settings.private.stripe.testSecretKey;
-var Stripe = Meteor.npmRequire('stripe')(secret);
+var Stripe = StripeAPI(secret);
 var Future = Npm.require('fibers/future');
 var Fiber  = Npm.require('fibers');
 
 Meteor.methods({
 
-  stripeCreateToken: function(card){
-    // Check our argument against the expected pattern. This is especially important
-    // here because we're dealing with sensitive customer information.
-    check(card, {
-      number: String,
-      exp_month: String,
-      exp_year: String,
-      cvc: String
-    });
-
-    // Because Stripe's API is asynchronous (meaning it doesn't block our function
-    // from running once it's started), we need to make use of the Fibers/Future
-    // library. This allows us to create a return object that "waits" for us to
-    // return a value to it.
-    var stripeToken = new Future();
-
-    // If all is well, call to the Stripe API to create our token!
-    Stripe.tokens.create({
-      card: card // Pass our card object to the "card" parameter.
-    }, function(error, token){
-      if (error){
-        // If we get an error, return it to our "waiting" return object.
-        stripeToken.return(error);
-      } else {
-        // If we get a token, return it to our "waiting" return object.
-        stripeToken.return(token.id);
-      }
-    });
-
-    return stripeToken.wait();
-  },
-
-  stripeCreateCustomer: function(card, email){
+  stripeCreateCustomer: function(token, email){
     // Check our arguments against their expected patterns. This is especially
     // important here because we're dealing with sensitive customer information.
-    check(card, {
-      number: String,
-      exp_month: String,
-      exp_year: String,
-      cvc: String
-    });
-
+    check(token, String);
     check(email, String);
 
     // Because Stripe's API is asynchronous (meaning it doesn't block our function
@@ -72,13 +34,8 @@ Meteor.methods({
     var stripeCustomer = new Future();
 
     // If all is well, call to the Stripe API to create our customer!
-    // Note: here, we're passing a card as well. Why? Because we're only creating
-    // customers when they sign up for our app, Stripe gives us the option to pass
-    // card data here, too, automating the token creation process. We could
-    // technically run the stripeCreateToken method above and pass the token to
-    // this method, but this saves us a step. Efficient!
     Stripe.customers.create({
-      card: card,
+      source: token,
       email: email
     }, function(error, customer){
       if (error){
@@ -162,7 +119,7 @@ Meteor.methods({
             plan: plan,
             status: subscription.status,
             date: subscription.current_period_end
-          }
+          };
           // And then we pass our update over to our updateUserPlan method.
           Meteor.call('updateUserPlan', update, function(error, response){
             if (error){
@@ -230,7 +187,7 @@ Meteor.methods({
       if (error){
         stripeUpdateCard.return(error);
       } else {
-        var card = response.cards.data[0].id;
+        var card = response.sources.data[0].id;
         // If all is well, call to the Stripe API to update our card!
         Stripe.customers.updateCard(getUser.customerId, card, updates, function(error, customer){
           if (error) {
@@ -245,15 +202,9 @@ Meteor.methods({
     return stripeUpdateCard.wait();
   },
 
-  stripeSwapCard: function(card){
-    // Check our arguments against their expected patterns. This is especially
-    // important here because we're dealing with sensitive customer information.
-    check(card, {
-      number: String,
-      exp_month: String,
-      exp_year: String,
-      cvc: String
-    });
+  stripeSwapCard: function(token){
+    // Check our arguments against their expected patterns.
+    check(token, String);
 
     // Because Stripe's API is asynchronous (meaning it doesn't block our function
     // from running once it's started), we need to make use of the Fibers/Future
@@ -273,15 +224,15 @@ Meteor.methods({
     // here is that this creates a card _on our customer_ not the card token itself. To
     // get our token, we'd call to our stripeCreateToken method (defined as an example above).
     Stripe.customers.update(getUser.customerId, {
-      card: card
+      source: token
     }, function(error, customer){
       if (error) {
         stripeSwapCard.return(error);
       } else {
         var card = {
-          lastFour: customer.cards.data[0].last4,
-          type: customer.cards.data[0].brand
-        }
+          lastFour: customer.sources.data[0].last4,
+          type: customer.sources.data[0].brand
+        };
         // Because we're running Meteor code inside of an async callback, we need to wrap
         // it in a Fiber. Note: this is a verbose way of doing this. You could refactor this
         // and the call to Stripe to use a Meteor.wrapAsync method instead. The difference is
@@ -291,7 +242,7 @@ Meteor.methods({
             auth: SERVER_AUTH_TOKEN,
             user: user,
             card: card
-          }
+          };
           // And then we pass our update over to our updateUserPlan method.
           Meteor.call('updateUserCard', update, function(error, response){
             if (error){
@@ -341,7 +292,7 @@ Meteor.methods({
               status: response.cancel_at_period_end ? "canceled" : response.status,
               ends: response.current_period_end
             }
-          }
+          };
           Meteor.call('updateUserSubscription', update, function(error, response){
             if (error){
               stripeCancelSubscription.return(error);
