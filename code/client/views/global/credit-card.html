@@ -5,7 +5,7 @@
         <label class="text-success"><i class="fa fa-lock"></i> Card Number (Totes Secure, Like a Bank)</label>
         {{#if isBilling}}
           {{#if addNewCard}}
-            <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+            <input type="text" data-stripe="cardNumber" class="form-control card-number" placeholder="Card Number">
             <p><a class="cancel-new-card" href="#">Cancel</a></p>
           {{else}}
             {{#if plan.subscription.payment.card}}
@@ -14,7 +14,7 @@
             {{/if}}
           {{/if}}
         {{else}}
-          <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+          <input type="text" data-stripe="cardNumber" class="form-control card-number" placeholder="Card Number">
         {{/if}}
       </div>
     </div>
@@ -46,23 +46,23 @@
 <template name="creditCardDetails">
   <div class="col-xs-4">
     <label>Exp. Mo.</label>
-    <input type="text" name="expMo" class="form-control exp-month" placeholder="Exp. Mo.">
+    <input type="text" data-stripe="expMo" class="form-control exp-month" placeholder="Exp. Mo.">
   </div>
   <div class="col-xs-4">
     <label>Exp. Yr.</label>
-    <input type="text" name="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
+    <input type="text" data-stripe="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
   </div>
   {{#if isBilling}}
     {{#if addNewCard}}
       <div class="col-xs-4">
         <label>CVC</label>
-        <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
+        <input type="text" data-stripe="cvc" class="form-control cvc" placeholder="CVC">
       </div>
     {{/if}}
   {{else}}
     <div class="col-xs-4">
       <label>CVC</label>
-      <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
+      <input type="text" data-stripe="cvc" class="form-control cvc" placeholder="CVC">
     </div>
   {{/if}}
 </template>

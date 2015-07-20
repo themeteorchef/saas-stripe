@@ -13,12 +13,7 @@ Meteor.methods({
       emailAddress: String,
       password: String,
       plan: String,
-      card: {
-        number: String,
-        exp_month: String,
-        exp_year: String,
-        cvc: String
-      }
+      token: String
     });
 
     // Before we send anything to Stripe, we should verify that our user doesn't
@@ -35,7 +30,7 @@ Meteor.methods({
       var newCustomer = new Future();
 
       // Create our customer.
-      Meteor.call('stripeCreateCustomer', customer.card, customer.emailAddress, function(error, stripeCustomer){
+      Meteor.call('stripeCreateCustomer', customer.token, customer.emailAddress, function(error, stripeCustomer){
         if (error) {
           console.log(error);
         } else {
@@ -76,8 +71,8 @@ Meteor.methods({
                     },
                     payment: {
                       card: {
-                        type: stripeCustomer.cards.data[0].brand,
-                        lastFour: stripeCustomer.cards.data[0].last4
+                        type: stripeCustomer.sources.data[0].brand,
+                        lastFour: stripeCustomer.sources.data[0].last4
                       },
                       nextPaymentDue: response.current_period_end
                     },

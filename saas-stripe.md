@@ -3,9 +3,9 @@ Although there are multiple parts to this recipe, what we need in terms of packa
 
 <p class="block-header">Terminal</p>
 ```.lang-bash
-meteor add meteorhacks:npm
+meteor add mrgalaxy:stripe
 ```
-We'll make use of the [`meteorhacks:npm`](https://atmospherejs.com/meteorhacks/npm) package to gain access to help us load up the official [Stripe for Node.js](https://www.npmjs.com/package/stripe) package. This will give us access to Stripe's API.
+We'll make use of the [`mrgalaxy:stripe`](https://atmospherejs.com/mrgalaxy/stripe) package to gain access to help us load up Stripe.js (Stripe's client side library) and the Stripe API for our work on the server side.
 
 <p class="block-header">Terminal</p>
 ```.lang-bash
@@ -25,25 +25,14 @@ We'll be doing some work on the server later and we'll make use of the [`random`
 </div>
 
 ### Configuring Our App
-Before we dive into implementing the Stripe API or managing usage, we need to get a few things setup that will make our life a bit easier down the road. Because we're relying on the [NPM version of the Stripe library](https://www.npmjs.com/package/stripe), we need to let our app know about it.
-
-#### Installing Stripe
-
-First, ensure that you've installed the `meteorhacks:npm` package. After you have, either boot up your application to trigger the creation of a file called `packages.json` in your project's root, or, go ahead and create the file yourself. We need to make sure this file exists because this is how we tell the `meteorhacks:npm` package _which_ NPM packages it needs to download and make accessible for us. We're shooting for something like this:
-
-<p class="block-header">/packages.json</p>
-```.lang-javascript
-{
-  "stripe": "3.0.3"
-}
-```
-
-Here, we define a single key set to the title of the package on the NPM repository, `stripe`, and assign it a value of `3.0.3`, the latest version of the package available as of writing. Once you've got this set, save your file and then restart your Meteor server. If you watch for it, you'll notice on bootup that Meteor will display a message about NPM dependencies being installed, specifically, Stripe. Awesome work!
+Before we dive into implementing the Stripe API or managing usage, we need to get a few things setup that will make our life a bit easier down the road.
 
 #### Defining Settings.json
-Now that we have Stripe setup, we need to focus on configuration data. First, in order to successfully access the Stripe API, we need to set a handful of "keys" that we can use to have Stripe acknowledge us. We need these because they're a unique identifier that Stripe will recognize and associate with our Stripe account. To do this, we'll make use of Meteor's `settings.json` file.
+First, in order to successfully access the Stripe API, we need to set a handful of "keys" that we can use to have Stripe acknowledge us. We need these because they're a unique identifier that Stripe will recognize and associate with our Stripe account. To do this, we'll make use of Meteor's `settings.json` file.
 
 [A little known feature](http://docs.meteor.com/#/full/meteor_settings) of Meteor is that you can define a global configuration file in your project's root: `settings.json`. This allows you to store both public _and_ private information that you'd like accessible throughout your application. By default, anything that we put into this file is _private_ and only accessible on the server. In our case, we'll only need private keys as all of work will be done on the server. To get started, create a file in your project root called `settings.json` and open it up.
+
+**Note: this will require you to start your Meteor server using the command** `meteor --settings settings.json`. This tells Meteor to look for a settings file when it starts in the location specified (in our case, we're looking for `settings.json` in our application's root).
 
 <div class="note">
   <h3>A quick note</h3>
@@ -71,7 +60,7 @@ The first thing we want to do is to add our Stripe keys. Stripe gives us four ke
 }
 ```
 
-Hang on a sec! You just said we'll only be using our _private_ keys. Right you are. However, it's important to know how to set _both_ your private and public keys. Note: Stripe uses a slightly different naming convention for their keys, so, `private == secret` and `public == publishable`. The meaning is exactly the same, but it's good to pay attention to. Also notice in the above example that we've broken our keys up into two objects `private` and `public`. What gives?
+Notice in the above example that we've broken our keys up into two objects `private` and `public`. What gives?
 
 Recall from earlier that by default, our `settings.json` file keeps everything _private_ and only accessible on the server. To get around this, Meteor acknowledges anything we place in our `public` object in our `settings.json` file as "allowed on the client." This is handy for things like storing public keys and other non-sensitive data. For organizational purposes, we've added a `private` object. Keep in mind this isn't _necessary_ for the data inside to show up on the server and merely a personal convention for [keeping things tidy](http://youtu.be/Lzt82V-xtfA?t=2m35s).
 
@@ -133,6 +122,65 @@ Hopefully this is obvious. What we're doing here is adding an additional "plans"
 
 The one thing to pay attention to is that we've added this to our `public` object so that it's accessible on both the client _and_ the server. Did I mention that the server has access to everything stored in the `public` object as well? Hmm, if I didn't...I just did! Onward!
 
+### Configuring Stripe
+Now that we have our API keys and plan data setup, we need to initialize Stripe on the client. As you will see in a little bit, we'll need to have access to Stripe on the client so that we can create a _token_ for credit cards.
+
+This is the mechanism that Stripe uses to keep our code PCI compliant. Instead of POSTing our user's credit card data to our server, we send it to Stripe on the client, letting them handle the messy bits. To help us out, Stripe will give us back a token (a unique identifier) that they can use to securely reference the card data we sent them. Awesome!
+
+Let's look at how we need to configure Stripe. We'll be covering two parts here: letting Stripe know about our publishable key and setting up some helper functions for creating a token that we can use later.
+
+#### Setting our publishable key
+
+First, we'll create a new file in our app at `/client/helpers/stripe.js`. Let's take a look at what we need to put there.
+
+<p class="block-header">/client/helpers/stripe.js</p>
+
+```.lang-javascript
+Meteor.startup(function() {
+  var stripeKey = Meteor.settings.public.stripe.testPublishableKey;
+  Stripe.setPublishableKey( stripeKey );
+  [...]
+});
+```
+
+See what's happening here? To start, we grab our `testPublishableKey` from our `settings.json` file. Note: we're pulling this from our `public` block where we stored values that are _safe_ to expose on the client.
+
+Next, we pass that value to a new method given to us by Stripe.js `Stripe.setPublishableKey()`. This let's Stripe know about us an associates our activity on the client with our Stripe account. Easy peasy. But wait...why is this wrapped in a `Meteor.startup()` block?
+
+Due to how the `mrgalaxy:stripe` package loads Stripe, we need to wait until Meteor has started up to make an attempt at calling Stripe. Without this, we'd get an `undefined` error. Make sense? Cool, let's move on to our helper methods for handling token creation.
+
+<p class="block-header">/client/helpers/stripe.js</p>
+
+```.lang-javascript
+Meteor.startup(function() {
+  [...]
+
+  STRIPE = {
+    getToken: function( domElement, card, callback ) {
+      Stripe.card.createToken( card, function( status, response ) {
+        if ( response.error ) {
+          Bert.alert( response.error.message, "danger" );
+        } else {
+          STRIPE.setToken( response.id, domElement, callback );
+        }
+      });
+    },
+    setToken: function( token, domElement, callback ) {
+      $( domElement ).append( $( "<input type='hidden' name='stripeToken' />" ).val( token ) );
+      callback();
+    }
+  };
+});
+```
+
+Woah! What is this thing? Well, in order to remain PCI compliant, we need to pass our user's card data to Stripe _first_ in order to create a card token. Because we'll be doing this a few times in our app, it makes sense to simplify this into a reusable function now.
+
+We have two methods here: `getToken` and `setToken`. Hopefully the names are pretty clear. `getToken` is responsible for taking our user's card data and passing it to Stripe. Depending on the response we get from Stripe, we either throw an error using `Bert.alert()` (our client side alert system), or, if the response is positive, pass data along to our `setToken` method.
+
+Why are we passing a `domElement` and a `callback` argument, though? Good question! This has to do with our "reusability factor." We'll be reusing this method on a few different forms, so this allows us to get the form element's DOM selector (as `domElement`) and a function to call _after_ Stripe has returned a token (as `callback`). Don't worry, this will all make sense in a little bit when we handle our signup flow.
+
+Looking at our `setToken` method, we can see that we're passing through our `domElement` and `callback`, as well as the token we've received from Stripe. Once we have this, we append a hidden `<input>` field on the form we've passed as `domElement` and set its value equal to the token we've received from Stripe. Lastly, we invoke our `callback` function, signifying that Stripe is finished and we're ready to move on. Nice! Ok. Now that we have this, we're ready to dig into some code.
+
 ### Signup
 The first part of Stripe that we'll be covering in this recipe is our signup flow. This is one of the more important steps because it's _how we get customers into our app_. If this doesn't work, our business doesn't work, so we need to pay attention. The first thing we need to do is pull together a template for our signup page. Let's take a look:
 
@@ -157,7 +205,7 @@ The first part of Stripe that we'll be covering in this recipe is our signup flo
     <label>Which plan sounds <em>amazing</em>?</label>
     {{>selectPlan}}
     <div class="form-group">
-      {{>creditCard}}
+      {{> Template.dynamic template="creditCard" data="signup"}}
     </div>
     <div class="form-group">
       <input type="submit" class="btn btn-success btn-block" data-loading-text="Setting up your trial..." style="margin-top: 40px; margin-bottom: 20px;" value="Put me on the rocketship">
@@ -241,46 +289,35 @@ Now that we have our plan selected, the next thing we need to do is get credit c
     <div class="col-xs-12">
       <div class="form-group">
         <label class="text-success"><i class="fa fa-lock"></i> Card Number (Totes Secure, Like a Bank)</label>
-        <input type="text" name="cardNumber" class="form-control card-number" placeholder="Card Number">
+        <input type="text" data-stripe="cardNumber" class="form-control card-number" placeholder="Card Number">
       </div>
     </div>
   </div> <!-- end .row -->
   <div class="row">
     <div class="col-xs-4">
       <label>Exp. Mo.</label>
-      <input type="text" name="expMo" class="form-control exp-month" placeholder="Exp. Mo.">
+      <input type="text" data-stripe="expMo" class="form-control exp-month" placeholder="Exp. Mo.">
     </div>
     <div class="col-xs-4">
       <label>Exp. Yr.</label>
-      <input type="text" name="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
+      <input type="text" data-stripe="expYr" class="form-control exp-year" placeholder="Exp. Yr.">
     </div>
     <div class="col-xs-4">
       <label>CVC</label>
-      <input type="text" name="cvc" class="form-control cvc" placeholder="CVC">
+      <input type="text" data-stripe="cvc" class="form-control cvc" placeholder="CVC">
     </div>
   </div> <!-- end .row -->
 </template>
 ```
 
-Pretty straightforward. But there's something to note. Here, we're making use of `name` attributes on each of our fields. [Stripe cautions against this](https://stripe.com/docs/tutorials/forms):
+Pretty straightforward. But there's something to note. Where a normal form would give each of its fields a `name` attribute, here, we're making use of `data-stripe` attributes on each of our fields. This is because [Stripe cautions against using name attributes](https://stripe.com/docs/tutorials/forms):
 
 >  Note how input fields representing sensitive card data (number, CVC, expiration month and year) do not have a "name" attribute. This prevents them from hitting your server when the form is submitted.
 
-The reason _we're_ doing this is that we want to validate our credit card form later, which requires the use of `name` attributes. To prevent this information from "hitting the server" like the quote above suggests, we're preventing the default method used to handle the form in our event map:
-
-<p class="block-header">/client/controllers/public/signup.js</p>
-```.lang-javascript
-Template.signup.events({
-  'submit form': function(e){
-    e.preventDefault();
-  }
-});
-```
-
-This means that when our signup form is submitted, it will not attempt to pass the values to the server. Instead, our validation will "catch" the event and relay the submission event to its `submitHandler` (see below). You're welcome to implement this however you see fit. I prefer client-side validation in _addition_ to server-side validation (given to us for free by the Stripe API). Forge your own path!
+This means that when our signup form is submitted, it will not attempt to pass the values to the server. Instead, our validation will "catch" the event and relay the submission event to its `submitHandler` (see below).
 
 #### Making it Work
-Okay. So we've got our templates in place and now we need to start interacting with Stripe. Before we do, we want to do one more thing on the client-side: validation. This is important because it ensures that the data we're sending to Stripe and storing in our database is as correct as possible. The last we thing we want is to think we've signed up a bunch of customers when really we just have a bunch of spam accounts being added.
+Okay. So we've got our templates in place and now we need to start interacting with Stripe. Before we do, we want to do one more thing on the client-side: validation. This is important because it ensures that the data we're storing in our database is as correct as possible. The last we thing we want is to think we've signed up a bunch of customers when really we just have a bunch of spam accounts being added.
 
 <p class="block-header">/client/controllers/public/signup.js</p>
 ```.lang-javascript
@@ -297,19 +334,6 @@ Template.signup.rendered = function(){
       password: {
         required: true,
         minlength: 6
-      },
-      cardNumber: {
-        creditcard: true,
-        required: true
-      },
-      expMo: {
-        required: true
-      },
-      expYr: {
-        required: true
-      },
-      cvc: {
-        required: true
       }
     },
     messages: {
@@ -323,19 +347,6 @@ Template.signup.rendered = function(){
       password: {
         required: "Please enter a password to sign up.",
         minlength: "Please use at least six characters."
-      },
-      cardNumber: {
-        creditcard: "Please enter a valid credit card.",
-        required: "Required."
-      },
-      expMo: {
-        required: "Required."
-      },
-      expYr: {
-        required: "Required."
-      },
-      cvc: {
-        required: "Required."
       }
     },
     submitHandler: function(){
@@ -345,49 +356,53 @@ Template.signup.rendered = function(){
 }
 ```
 
-Woof. That's a nice chunk of code. It's actually quite simple. What we're doing here is passing our `<form id="#application-signup">` element to our `validate()` method (given to us by `themeteorchef:jquery-validation`), and then specifying rules and messages for each of the fields in our form. Note: this is where we're using the `name` attribute from our fields that we mentioned earlier. Paired with each rule is a "message" that can be output to the user if validation fails. Perfect. Once our form is valid, we call to our validation's `submitHandler` function to complete signup.
+Woof. That's a nice chunk of code. It's actually quite simple. What we're doing here is passing our `<form id="#application-signup">` element to our `validate()` method (given to us by `themeteorchef:jquery-validation`), and then specifying rules and messages for each of the fields in our form. Paired with each rule is a "message" that can be output to the user if validation fails. Perfect. Once our form is valid, we call to our validation's `submitHandler` function to complete signup.
 
 <p class="block-header">/client/controllers/public/signup.js</p>
 ```.lang-javascript
-var customer = {
-  name: $('[name="fullName"]').val(),
-  emailAddress: $('[name="emailAddress"]').val(),
-  password: $('[name="password"]').val(),
-  plan: $('[name="selectPlan"]:checked').val(),
-  card: {
-    number: $('[name="cardNumber"]').val(),
-    exp_month: $('[name="expMo"]').val(),
-    exp_year: $('[name="expYr"]').val(),
-    cvc: $('[name="cvc"]').val()
-  }
-}
+STRIPE.getToken( '#application-signup', {
+  number: $('[data-stripe="cardNumber"]').val(),
+  exp_month: $('[data-stripe="expMo"]').val(),
+  exp_year: $('[data-stripe="expYr"]').val(),
+  cvc: $('[data-stripe="cvc"]').val()
+}, function() {
+  var customer = {
+    name: $('[name="fullName"]').val(),
+    emailAddress: $('[name="emailAddress"]').val(),
+    password: $('[name="password"]').val(),
+    plan: $('[name="selectPlan"]:checked').val(),
+    token: $('[name="stripeToken"]').val()
+  };
 
-var submitButton = $('input[type="submit"]').button('loading');
+  var submitButton = $('input[type="submit"]').button('loading');
 
-Meteor.call('createTrialCustomer', customer, function(error, response){
-  if (error) {
-    alert(error.reason);
-    submitButton.button('reset');
-  } else {
-    if ( response.error ) {
-      alert(response.message);
+  Meteor.call('createTrialCustomer', customer, function(error, response){
+    if (error) {
+      alert(error.reason);
       submitButton.button('reset');
     } else {
-      Meteor.loginWithPassword(customer.emailAddress, customer.password, function(error){
-        if (error) {
-          alert(error.reason);
-          submitButton.button('reset');
-        } else {
-          Router.go('/lists');
-          submitButton.button('reset');
-        }
-      });
+      if ( response.error ) {
+        alert(response.message);
+        submitButton.button('reset');
+      } else {
+        Meteor.loginWithPassword(customer.emailAddress, customer.password, function(error){
+          if (error) {
+            alert(error.reason);
+            submitButton.button('reset');
+          } else {
+            Router.go('/lists');
+            submitButton.button('reset');
+          }
+        });
+      }
     }
-  }
+  });
 });
 ```
 
-Holy nested functions, Batman! Don't worry. This isn't as complex as it seems. Let's step through it. First, we're defining a new object to store all of the data from our signup form. Simple. Next, as an added UX touch we call to Bootstrap's `.button('loading')` method, passing `loading` as our parameter. This is totally optional (and really, only if you're using Bootstrap), but this allows us to toggle state when our submit button is clicked. So, instead of having the user click and nothing happens, the button changes to read "Setting up your trial..." Pretty good. [Pretty, pretty, pretty, pretty good](http://youtu.be/O_05qJTeNNI?t=18s).
+Holy nested functions, Batman! Don't worry. This isn't as complex as it seems. Let's step through it. First, we're making use of our `STRIPE.getToken()` method we set up a little bit ago. Notice that here, we're passing the ID of our signup form `#application-signup` to our `getToken` method along with our credit card form data and a big callback function. When this is called, we'll send our user's credit card data to Stripe for processing. Once it's done, Stripe will call the big callback function we're passing here.
+
+First, we're defining a new object to store all of the data (aside from our credit card) from our signup form. Simple. Next, as an added UX touch we call to Bootstrap's `.button('loading')` method, passing `loading` as our parameter. This is totally optional (and really, only if you're using Bootstrap), but this allows us to toggle state when our submit button is clicked. So, instead of having the user click and nothing happens, the button changes to read "Setting up your trial..." Pretty good. [Pretty, pretty, pretty, pretty good](http://youtu.be/O_05qJTeNNI?t=18s).
 
 Next, we're calling to a server-side method called `createTrialCustomer`. Can you guess what this does? Let's pause on the client and hop to the server to see what this does for us (hint: it's awesome).
 
@@ -402,12 +417,7 @@ Meteor.methods({
       emailAddress: String,
       password: String,
       plan: String,
-      card: {
-        number: String,
-        exp_month: String,
-        exp_year: String,
-        cvc: String
-      }
+      token: String
     });
 
     var emailRegex     = new RegExp(customer.emailAddress, "i");
@@ -431,7 +441,7 @@ Alright! Next we get into the meat and potatoes of this thing. Once we've verifi
 if ( !lookupCustomer ) {
   var newCustomer = new Future();
 
-  Meteor.call('stripeCreateCustomer', customer.card, customer.emailAddress, function(error, stripeCustomer){
+  Meteor.call('stripeCreateCustomer', customer.token, customer.emailAddress, function(error, stripeCustomer){
     if (error) {
       console.log(error);
     } else {
@@ -462,34 +472,27 @@ So, first things first, we need to talk about how Stripe stores data. You'll not
 In order to create a subscription, we need to create a _customer_ to bind that subscription to first. This is why we've got the wild nesting going on above. Let's peel back the onion a bit and take a look at creating a customer.
 
 #### Creating a Customer in Stripe
-Before we do anything else, we need to create a customer. Before we create a customer (having fun yet?), we need to load in our Stripe NPM package from earlier and pass it our API key. What does that look like?
+Before we do anything else, we need to create a customer. Before we create a customer (having fun yet?), we need to load in Stripe using the `StripeAPI()` method we picked up from the `mrgalaxy:stripe` package and pass it our API key. What does that look like?
 
 <p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
 var secret = Meteor.settings.private.stripe.testSecretKey;
-var Stripe = Meteor.npmRequire('stripe')(secret);
+var Stripe = StripeAPI(secret);
 ```
 
-Remember how we installed `meteorhacks:npm` earlier and defined a `package.json` file in our project's root? This is where we make use of it. First, we call to our `settings.json` to obtain our API key. Note: we can access any key/value in this file by calling `Meteor.settings`. From there, we just use dot notation to call to the nested object _in_ that file to access the data we want. Here, we're getting our `testSecretKey` for Stripe.
+First, we call to our `settings.json` to obtain our API key. Note: we can access any key/value in this file by calling `Meteor.settings`. From there, we just use dot notation to call to the nested object _in_ that file to access the data we want. Here, we're getting our `testSecretKey` for Stripe.
 
-After we've got it, we create a variable called `Stripe` and load in our package via NPM. Pump the brakes!
-
-<div class="note">
-<h3>A quick note</h3>
-<p>When using the meteorhacks:npm package, we need to modify how we load in NPM packages. Where we <em>would</em> call Npm.require with a package we loaded directly through Meteor, the meteorhacks:npm package creates a sort of alias Meteor.npmRequire for us to use. Keep in mind: if we <em>do not</em> use this alias, meteorhacks:npm won't know about the package and our application will crash. The more you know!</p>
-</div>
-
-Good. So, when loading our Stripe package, notice that we also need to pass our API key via a second pair of parentheses after we load the package: `Meteor.npmRequire('stripe')(secret);`. In a sense, this is like invoking the package as a function and passing our `secret` variable as a parameter. Once this is done, Stripe's API will be accessible. Next, let's look at our method for creating our customer. Finally.
+After we've got it, we create a variable called `Stripe` and assign it to our `StripeAPI()` call. Once this is done, Stripe's API will be accessible. Next, let's look at our method for creating our customer. Finally.
 
 <p class="block-header">/server/methods/stripe.js</p>
 ```.lang-javascript
-stripeCreateCustomer: function(card, email){
+stripeCreateCustomer: function(token, email){
   // Note: we'd check() both of our arguments here, but I've stripped this out for the sake of brevity.
 
   var stripeCustomer = new Future();
 
   Stripe.customers.create({
-    card: card,
+    source: token,
     email: email
   }, function(error, customer){
     if (error){
@@ -579,8 +582,8 @@ Meteor.call('stripeCreateSubscription', customerId, plan, function(error, respon
           },
           payment: {
             card: {
-              type: stripeCustomer.cards.data[0].brand,
-              lastFour: stripeCustomer.cards.data[0].last4
+              type: stripeCustomer.sources.data[0].brand,
+              lastFour: stripeCustomer.sources.data[0].last4
             },
             nextPaymentDue: response.current_period_end
           }
