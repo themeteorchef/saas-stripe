@@ -1,7 +1,10 @@
+Hi GitHub :)
+
 ### Getting Started
 Although there are multiple parts to this recipe, what we need in terms of packages is actually quite limited.
 
 <p class="block-header">Terminal</p>
+
 ```.lang-bash
 meteor add mrgalaxy:stripe
 ```
