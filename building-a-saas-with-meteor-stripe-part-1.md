@@ -20,7 +20,7 @@ Because we'll be working with a handful of dates, we'll make use of the [`moment
 ```.lang-bash
 meteor add random
 ```
-We'll be doing some work on the server later and we'll make use of the [`random`](http://docs.meteor.com/#/full/random) package to help us lock down our methods a bit.
+We'll be doing some work on the server later and we'll make use of the [`random`](https://docs.meteor.com/#/full/random) package to help us lock down our methods a bit.
 
 <div class="note">
   <h3>A quick note</h3>
@@ -33,7 +33,7 @@ Before we dive into implementing the Stripe API or managing usage, we need to ge
 #### Defining Settings.json
 First, in order to successfully access the Stripe API, we need to set a handful of "keys" that we can use to have Stripe acknowledge us. We need these because they're a unique identifier that Stripe will recognize and associate with our Stripe account. To do this, we'll make use of Meteor's `settings.json` file.
 
-[A little known feature](http://docs.meteor.com/#/full/meteor_settings) of Meteor is that you can define a global configuration file in your project's root: `settings.json`. This allows you to store both public _and_ private information that you'd like accessible throughout your application. By default, anything that we put into this file is _private_ and only accessible on the server. In our case, we'll only need private keys as all of work will be done on the server. To get started, create a file in your project root called `settings.json` and open it up.
+[A little known feature](https://docs.meteor.com/#/full/meteor_settings) of Meteor is that you can define a global configuration file in your project's root: `settings.json`. This allows you to store both public _and_ private information that you'd like accessible throughout your application. By default, anything that we put into this file is _private_ and only accessible on the server. In our case, we'll only need private keys as all of work will be done on the server. To get started, create a file in your project root called `settings.json` and open it up.
 
 **Note: this will require you to start your Meteor server using the command** `meteor --settings settings.json`. This tells Meteor to look for a settings file when it starts in the location specified (in our case, we're looking for `settings.json` in our application's root).
 
@@ -66,7 +66,7 @@ The first thing we want to do is to add our Stripe keys. Stripe gives us four ke
 
 Notice in the above example that we've broken our keys up into two objects `private` and `public`. What gives?
 
-Recall from earlier that by default, our `settings.json` file keeps everything _private_ and only accessible on the server. To get around this, Meteor acknowledges anything we place in our `public` object in our `settings.json` file as "allowed on the client." This is handy for things like storing public keys and other non-sensitive data. For organizational purposes, we've added a `private` object. Keep in mind this isn't _necessary_ for the data inside to show up on the server and merely a personal convention for [keeping things tidy](http://youtu.be/Lzt82V-xtfA?t=2m35s).
+Recall from earlier that by default, our `settings.json` file keeps everything _private_ and only accessible on the server. To get around this, Meteor acknowledges anything we place in our `public` object in our `settings.json` file as "allowed on the client." This is handy for things like storing public keys and other non-sensitive data. For organizational purposes, we've added a `private` object. Keep in mind this isn't _necessary_ for the data inside to show up on the server and merely a personal convention for [keeping things tidy](https://youtu.be/Lzt82V-xtfA?t=2m35s).
 
 Okay, awesome! We've got our keys setup for Stripe, but there's one more thing we want to add to our configuration file before we move on: plan data. This is a bit preemptive as we won't need to access the data for a bit, but it's good to take care of it now.
 
@@ -123,7 +123,7 @@ Okay, awesome! We've got our keys setup for Stripe, but there's one more thing w
 }
 ```
 
-Hopefully this is obvious. What we're doing here is adding an additional "plans" block to our `public` object in `settings.json`. What this does is give us a global definition for the plans that will be available to customers of our application. Ok...but why? Well, this is one of the fun parts of running a SaaS. If you're doing well, you'll inevitably change or modify your pricing at some point. Having this set here means that whenever we need to reference plan data in our app, we can pull it from here. The punchline? This information is _global_, meaning if we change it here, [our entire application updates](http://media.giphy.com/media/g5iVGDyEldeVi/giphy.gif).
+Hopefully this is obvious. What we're doing here is adding an additional "plans" block to our `public` object in `settings.json`. What this does is give us a global definition for the plans that will be available to customers of our application. Ok...but why? Well, this is one of the fun parts of running a SaaS. If you're doing well, you'll inevitably change or modify your pricing at some point. Having this set here means that whenever we need to reference plan data in our app, we can pull it from here. The punchline? This information is _global_, meaning if we change it here, [our entire application updates](https://media.giphy.com/media/g5iVGDyEldeVi/giphy.gif).
 
 The one thing to pay attention to is that we've added this to our `public` object so that it's accessible on both the client _and_ the server. Did I mention that the server has access to everything stored in the `public` object as well? Hmm, if I didn't...I just did! Onward!
 
@@ -229,7 +229,7 @@ Located at `/signup` in our application (I've pre-defined the route for this in 
 
 But wait! We should note that our goal here is _not to charge their credit card_. Instead, we only want to "hold on" to their credit card information, but not charge it. Why? The majority of SaaS products allow customers to "demo" or "trial" their application. We're no different. We want to ensure that our customers get an opportunity to make sure Todoodle is right for them before we charge them.
 
-First, we start by gathering some basic information: a full name, email address, and password for our customer. We've choosen to solely use the `accounts-password` package for this, but you could [extend this to include oAuth logins as well](http://themeteorchef.com/recipes/roll-your-own-authentication). Next, we link to another template `{{>selectPlan}}`. What's that about?
+First, we start by gathering some basic information: a full name, email address, and password for our customer. We've choosen to solely use the `accounts-password` package for this, but you could [extend this to include oAuth logins as well](https://themeteorchef.com/recipes/roll-your-own-authentication). Next, we link to another template `{{>selectPlan}}`. What's that about?
 
 #### Selecting a Plan
 
@@ -289,7 +289,7 @@ Next up is a two parter: selecting plans. By default, we want to ensure that we'
 Just below that, we want to handle the event for "checking" our selected option. This is admittedly a bit tricky. Because we're watching for a click event on our `.list-group-item` element, we need to "find" our radio button and check it whenever its parent is clicked. Confused? To help us out, we can use a little jQuery-fu to find the radio button and mark it as checked `parent.find('input[type="radio"]').prop("checked", true);`. Wonderful. This is one of those "more than one way to skin a cat" type of problems, so make sure to play with it!
 
 #### Credit Card Information
-Now that we have our plan selected, the next thing we need to do is get credit card information. This, too, has been split into its own template, however, for different reasons. One of the nice things about Meteor is that we can reuse templates anywhere we'd like. In our application, we'll need a credit card form more than once. Thanks to Spacebars and Meteor, we can do this without a lot of headaches. [Oh happy day](http://youtu.be/6zT8AyfsFmA?t=1m28s). Let's take a peek:
+Now that we have our plan selected, the next thing we need to do is get credit card information. This, too, has been split into its own template, however, for different reasons. One of the nice things about Meteor is that we can reuse templates anywhere we'd like. In our application, we'll need a credit card form more than once. Thanks to Spacebars and Meteor, we can do this without a lot of headaches. [Oh happy day](https://youtu.be/6zT8AyfsFmA?t=1m28s). Let's take a peek:
 
 <p class="block-header">/client/views/global/credit-card.html</p>
 
@@ -414,7 +414,7 @@ STRIPE.getToken( '#application-signup', {
 
 Holy nested functions, Batman! Don't worry. This isn't as complex as it seems. Let's step through it. First, we're making use of our `STRIPE.getToken()` method we set up a little bit ago. Notice that here, we're passing the ID of our signup form `#application-signup` to our `getToken` method along with our credit card form data and a big callback function. When this is called, we'll send our user's credit card data to Stripe for processing. Once it's done, Stripe will call the big callback function we're passing here.
 
-First, we're defining a new object to store all of the data (aside from our credit card) from our signup form. Simple. Next, as an added UX touch we call to Bootstrap's `.button('loading')` method, passing `loading` as our parameter. This is totally optional (and really, only if you're using Bootstrap), but this allows us to toggle state when our submit button is clicked. So, instead of having the user click and nothing happens, the button changes to read "Setting up your trial..." Pretty good. [Pretty, pretty, pretty, pretty good](http://youtu.be/O_05qJTeNNI?t=18s).
+First, we're defining a new object to store all of the data (aside from our credit card) from our signup form. Simple. Next, as an added UX touch we call to Bootstrap's `.button('loading')` method, passing `loading` as our parameter. This is totally optional (and really, only if you're using Bootstrap), but this allows us to toggle state when our submit button is clicked. So, instead of having the user click and nothing happens, the button changes to read "Setting up your trial..." Pretty good. [Pretty, pretty, pretty, pretty good](https://youtu.be/O_05qJTeNNI?t=18s).
 
 Next, we're calling to a server-side method called `createTrialCustomer`. Can you guess what this does? Let's pause on the client and hop to the server to see what this does for us (hint: it's awesome).
 
@@ -443,7 +443,7 @@ Meteor.methods({
 });
 ```
 
-If you've been following with [our other recipes](http://themeteorchef.com/recipes), this should all look familiar. First, we pass our `customer` argument to our good friend [Check](http://docs.meteor.com/#/full/check). Once we're certain that what we've received from the client is what we expect, we move onto verify that the email address passed doesn't exist in our database already. Why do we do this?
+If you've been following with [our other recipes](https://themeteorchef.com/recipes), this should all look familiar. First, we pass our `customer` argument to our good friend [Check](https://docs.meteor.com/#/full/check). Once we're certain that what we've received from the client is what we expect, we move onto verify that the email address passed doesn't exist in our database already. Why do we do this?
 
 As you'll see in a little bit, we technically create our customer's Meteor account _after_ we've created their account at Stripe (this will make more sense shortly). Checking the email before we do anything else ensures that our customer 1.) doesn't already exist in our database, and 2.) that we're not creating duplicate customers in Stripe. An ounce of prevention...or something like that.
 
@@ -636,7 +636,7 @@ To get around this, we can set the value of `Accounts.createUser()` to a variabl
 
 Finally, notice just like with our Stripe methods, we're using a Future here to "wait" for a value to send back to the client.
 
-Once we have that value (if our method succeeds, this value is arbitrary, if it fails, this value will contain an error to display on the client), we can return to the client. [Zwoop! Back up another level](http://youtu.be/cMkmGb1W-9s?t=1m1s).
+Once we have that value (if our method succeeds, this value is arbitrary, if it fails, this value will contain an error to display on the client), we can return to the client. [Zwoop! Back up another level](https://youtu.be/cMkmGb1W-9s?t=1m1s).
 
 #### Returning to the Client
 Okay, so we're all setup with Stripe, our user exists in the database...now what? Now, we must bow down to the User Experience Gods and complete our signup flow. Let's see how we do it.
@@ -673,7 +673,7 @@ After this, in our `else`, we're looking for _another_ error. [What, what, what]
 
 Time to login our user! This is actually pretty cool. Because we technically already "know" our user's email address and password (remember, these were defined earlier in our `customer` object at the top of our `submitHandler`), we can just "reuse" these to log them in. We can get away with this because at this point, we know they have an account in our database with these values. Sneaky!
 
-Finally, in the callback of `loginWithPassword`, we test for an error _one more time_ and if all is well, redirect the user to the `/lists` view where they can see their current todo lists. We also reset the button again for good measure. Woah! Our signup flow is complete. At this point, we've succesfully signed our user up for an account with a trial on Stripe. [High fives all around](http://media2.giphy.com/media/DohrJX1h2W5RC/giphy.gif)!
+Finally, in the callback of `loginWithPassword`, we test for an error _one more time_ and if all is well, redirect the user to the `/lists` view where they can see their current todo lists. We also reset the button again for good measure. Woah! Our signup flow is complete. At this point, we've succesfully signed our user up for an account with a trial on Stripe. [High fives all around](https://media2.giphy.com/media/DohrJX1h2W5RC/giphy.gif)!
 
 <div class="note">
   <h3>A quick note</h3>
@@ -782,7 +782,7 @@ Meteor.call('checkUserQuota', user, function(error, response){
 ```
 Back on the client, we take the returned `true` or `false` value and set it equal to a `Session` variable that's unique to our current user. The reason we're doing this here is that if we were simply to return our value from our method, our helper wouldn't be able to "see" it. Doing this ensures that the value is made accessible to the helper when it's ready. Neat! Outside of our method call, we simply return a variable `available` from our helper that's assigned to `Session.get('userListsAvailable_' + user)`.
 
-It should be obvious now, but as we're simply returning `true` or `false`, this will correctly toggle our template helpers, revealing the proper UI depending on the user's account status. [Woah](http://media.giphy.com/media/nVkpHJrIwcI8/giphy.gif).
+It should be obvious now, but as we're simply returning `true` or `false`, this will correctly toggle our template helpers, revealing the proper UI depending on the user's account status. [Woah](https://media.giphy.com/media/nVkpHJrIwcI8/giphy.gif).
 
 ##### Controlling the Quota
 So we have a way for checking the quota in place, but how do we actually _control_ that quota? Notice that in our `/lists` view, you have the ability to create new lists. Additionally, if you click into an individual list, you have the ability to delete a list. What do these do?
@@ -909,7 +909,7 @@ checkUserPlan: function(user){
 
 This is very similar to our `checkUserQuota` method, but instead of determining whether the user has todo lists available, here we expose their plan data to our helper. Just like before, we pull up the user's plan information and use the underscore `_.find()` method to compare against our global plan data.
 
-Next, we create a new object `planData` to return to the client that includes the information we want accessible to our helper. As a little UX touch, we use a ternary operator to check the limit on the plan and append a string corresponding to the plan's plurarlity. So, for example, if our user's limit is one, we get the correct contextual `1 list` string, or if they have 5, we get `5 lists`. Go ahead, [flex](http://youtu.be/rec_7Si0MEA?t=1m4s), that's pretty boss.
+Next, we create a new object `planData` to return to the client that includes the information we want accessible to our helper. As a little UX touch, we use a ternary operator to check the limit on the plan and append a string corresponding to the plan's plurarlity. So, for example, if our user's limit is one, we get the correct contextual `1 list` string, or if they have 5, we get `5 lists`. Go ahead, [flex](https://youtu.be/rec_7Si0MEA?t=1m4s), that's pretty boss.
 
 <p class="block-header">/client/views/authenticated/todo-lists.html</p>
 
@@ -926,7 +926,7 @@ Note that now on the client, we can access our plan information via the `{{plan}
 
 #### Displaying the User's Plan on the Billing Screen
 
-Home stretch! There's just one more thing that we need to do before we leave the rest to [part two](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2). Over in our user's `/billing` view (specifically our `billingOverview` template), we want to display their plan information so they can see the status of their account and decide whether or not to upgrade/downgrade.
+Home stretch! There's just one more thing that we need to do before we leave the rest to [part two](https://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2). Over in our user's `/billing` view (specifically our `billingOverview` template), we want to display their plan information so they can see the status of their account and decide whether or not to upgrade/downgrade.
 
 <p class="block-header">/client/views/authenticated/billing/_billing-overview.html</p>
 
@@ -972,7 +972,7 @@ A few things to pay attention to. First, we display the user's current plan info
 </div>
 ```
 
-Making use of our `{{plan}}` helper and a dash of CSS-fu, we can display the user's current plan usage as a percentage of a bar! To do it, we make use of a helper `{{percentage}}` that we've defined in `clients/helpers/helpers-ui.js` that takes our user's current lists `used` value and divides it by their current plan's `limit`. The result is a percentage that we can use to set the width on the "used" bar to visually show how much of a plan has been used. [Oh dear](http://media2.giphy.com/media/QHXvwJwtUBLBm/giphy.gif).
+Making use of our `{{plan}}` helper and a dash of CSS-fu, we can display the user's current plan usage as a percentage of a bar! To do it, we make use of a helper `{{percentage}}` that we've defined in `clients/helpers/helpers-ui.js` that takes our user's current lists `used` value and divides it by their current plan's `limit`. The result is a percentage that we can use to set the width on the "used" bar to visually show how much of a plan has been used. [Oh dear](https://media2.giphy.com/media/QHXvwJwtUBLBm/giphy.gif).
 
 Last but not least, just beneath this block we display our user's payment information...
 
@@ -988,9 +988,9 @@ Last but not least, just beneath this block we display our user's payment inform
 Just like before, thanks to our `{{plan}}` helper we can call this information up toot sweet. Now, our user can see all of their current plan information on screen! Not exciting to you? Consider this is how they'll decide whether or not they should keep their subscription active. Yeah. That's what pays for your dog food, bro. Don't hate.
 
 #### That's it!
-We did it! Well, at least part of it. This concludes part 1 of [2](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2). It was a lot of work, so give yourself a pat on the back.
+We did it! Well, at least part of it. This concludes part 1 of [2](https://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2). It was a lot of work, so give yourself a pat on the back.
 
-![Zack and Slater patting themselves on the back](http://media.giphy.com/media/9Q249Qsl5cfLi/giphy.gif)
+![Zack and Slater patting themselves on the back](https://media.giphy.com/media/9Q249Qsl5cfLi/giphy.gif)
 
 ### Wrap Up & Summary
 Very cool stuff. In this recipe we learned how to sign users up for our app, create a customer with a subscription on Stripe, and show our customer's their plan information. We also learned how to trigger state in our app to encourage customer's to upgrade if and when they hit their current plan's limits, and how to determine when to display that state by managing the customer's quota. Wild stuff.
@@ -1001,5 +1001,5 @@ We'll take a look at helping our customer update their plan information, cancel 
 Until next time!
 
 <div class="note">
-  <p>Part 2 is now live! <a href="http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2/">Check it out</a>.</p>
+  <p>Part 2 is now live! <a href="https://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2/">Check it out</a>.</p>
 </div>
