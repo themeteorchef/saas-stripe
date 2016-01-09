@@ -1,20 +1,20 @@
 ### Getting Started
-To get up and running in part two, we only need to include one additional package to our existing repository that we set up in [part one](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1).
+To get up and running in part two, we only need to include one additional package to our existing repository that we set up in [part one](https://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1).
 
 <p class="block-header">Terminal</p>
 
 ```.lang-bash
 meteor add themeteorchef:bert
 ```
-Because we'll be doing a bit of work in the UI, we'll use [themeteorchef:bert](http://atmospherejs.com/themeteorchef/bert) package to give us access to some spiffy alerts. This package will help us display feedback to customers when they perform an action in the app.
+Because we'll be doing a bit of work in the UI, we'll use [themeteorchef:bert](https://atmospherejs.com/themeteorchef/bert) package to give us access to some spiffy alerts. This package will help us display feedback to customers when they perform an action in the app.
 
 <div class="note">
   <h3>A quick note</h3>
-  <p>This recipe relies on several other packages that come as part of <a href="https://github.com/themeteorchef/base">Base</a>, the boilerplate kit used here on The Meteor Chef. The packages listed above are merely additions to the packages that are included by default in the kit. Make sure to reference the <a href="https://github.com/themeteorchef/base#packages-included">Packages Included</a> list for Base to ensure you have fulfilled all of the dependencies. Additional packages used for this recipe can be found in the "Getting Started" section of <a href="http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1">part one</a> of this recipe.</p>  
+  <p>This recipe relies on several other packages that come as part of <a href="https://github.com/themeteorchef/base">Base</a>, the boilerplate kit used here on The Meteor Chef. The packages listed above are merely additions to the packages that are included by default in the kit. Make sure to reference the <a href="https://github.com/themeteorchef/base#packages-included">Packages Included</a> list for Base to ensure you have fulfilled all of the dependencies. Additional packages used for this recipe can be found in the "Getting Started" section of <a href="https://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1">part one</a> of this recipe.</p>  
 </div>
 
 ### Starting the Server
-Don't forget that because we added a settings file `settings.json` [during part 1](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1), we need to start up our server with the command `meteor --settings settings.json`. Again, this command tells Meteor about our settings file. Without this, we'll see errors about Meteor not being able to locate our Stripe token.
+Don't forget that because we added a settings file `settings.json` [during part 1](https://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1), we need to start up our server with the command `meteor --settings settings.json`. Again, this command tells Meteor about our settings file. Without this, we'll see errors about Meteor not being able to locate our Stripe token.
 
 ### Changing Plans
 When we left off in part one, we were focused on wiring up the customer's plan information to the billing overview page. With all of our static data in place, now we need to focus on making things a bit more dynamic. To get started, we need to make it possible for our customers to change their current plan.
@@ -54,7 +54,7 @@ Over on the `/billing/plan` page, we've got a template setup that pulls in the l
 
 Okay, so, there's quite a bit going on here. Let's focus on the `{{#each plans}}` part. Here, we're simply telling our template for each plan returned to our helper (this is the array on plans in `settings.json`—we'll cover wiring this up soon), we want to output a list item. Inside of that list item, we grab the name of the current plan and then we get into some sticky logic. What the heck is this?
 
-To make things a bit easier on our customers, we want to give them a bit of [affordance](http://en.wikipedia.org/wiki/Affordance) as to _what_ plans they can change to and the impact that will have on their account. We break this into two parts by using the handlebar's `{{#if}}` helper in combination with our own `{{equals}}` helper.
+To make things a bit easier on our customers, we want to give them a bit of [affordance](https://en.wikipedia.org/wiki/Affordance) as to _what_ plans they can change to and the impact that will have on their account. We break this into two parts by using the handlebar's `{{#if}}` helper in combination with our own `{{equals}}` helper.
 
 Recall that in part one, we create a UI helper called `{{plan}}` that returns the current customer's plan information. Here, we access that, comparing the value of the customer's current plan name (e.g. "small") with the name of the plan currently being iterated in our `{{#each}}` block. Recall that our `{{equals}}` helper is setup to compare the first and second values we pass to it for equality. If they _are_ the same, we return a single button to our interface that's disabled and labeled with "Current Plan."
 
@@ -226,7 +226,7 @@ First, we do a `check()` on the `plan` argument we passed (remember, this is equ
 
 <div class="note">
   <h3>A quick note</h3>
-  <p>It was mentioned in the comments for part one of this recipe over on <a href="http://crater.io/posts/7xmPagxuQjwMqZzcY">crater.io</a> by Arunoda from <a href="http://meteorhacks.com">Meteor Hacks</a> that instead of all this Future stuff, we could just use `Meteor.wrapAsync`. He's right. There's a good reason I _haven't_ used it here and that has to do with comprehension. This is opinionated, but I've found the syntax of `Meteor.wrapAsync()` to be a bit confusing.</p>
+  <p>It was mentioned in the comments for part one of this recipe over on <a href="https://crater.io/posts/7xmPagxuQjwMqZzcY">crater.io</a> by Arunoda from <a href="https://meteorhacks.com">Meteor Hacks</a> that instead of all this Future stuff, we could just use `Meteor.wrapAsync`. He's right. There's a good reason I _haven't_ used it here and that has to do with comprehension. This is opinionated, but I've found the syntax of `Meteor.wrapAsync()` to be a bit confusing.</p>
   <p>After tinkering with the code above, I found that it was much easier to explain what was happening using the Future's pattern. I should note that _neither_ option is wrong. While I can't speak on performance, I'd imagine that with the little bit of clarity you gain from using a Future, you lose a tiny bit of performance. This is entirely, speculative, though, and I'd encourage you trying out both patterns in your own application(s) before putting a stake in the ground. Use what fits best!</p>
 </div>
 
@@ -257,7 +257,7 @@ Fiber(function(){
 
 Because we're running Meteor code in the callback of another function, Meteor will require it to run within a `Fiber`. Why? Once we're in the callback of another function, the original Meteor environment (outside of the callback we're in) is no longer available. This means that Meteor cannot "see" things like `Meteor.userId()` or call to methods. Wrapping everything in a `Fiber(function(){}).run()` call helps us get around that.
 
-Inside of our Fiber, we call to `updateUserPlan`, passing our update object we've defined above it. Notice that here, we're making use of the `SERVER_AUTH_TOKEN` pattern from [part one](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1) again. We're also pulling in some data that we've received in the `subscription` argument from Stripe. Let's jump over to see what this method is doing.
+Inside of our Fiber, we call to `updateUserPlan`, passing our update object we've defined above it. Notice that here, we're making use of the `SERVER_AUTH_TOKEN` pattern from [part one](https://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1) again. We're also pulling in some data that we've received in the `subscription` argument from Stripe. Let's jump over to see what this method is doing.
 
 <p class="block-header">/server/methods/data/update/user.js</p>
 
@@ -290,7 +290,7 @@ updateUserSubscription: function(update){
 
 Look familliar? Just like we did in part one, we're wrapping the meat of our method in a check for `SERVER_AUTH_TOKEN`. Once we're sure we're on the server, we just call to `Meteor.users.update`, passing our user's `id`. Easy peasy. Our update is simply the values we passed over to our method from within our `Stripe.customers.updateSubscription` callback. It's a bit Inception-y, but you can sort of think of it like hot potato. Each of our methods is just tossing the potato (our call from the client side) until it gets a response (or an error). Once our user is updated, we simply return our `updateUserSubscription` Future we've defined here _back to_ our `stripeUpdateSubscription` method to ultimately return to the client.
 
-So let's pause for a second. What does all of this actually _achieve_? Two things: it ensures that our customer's subscription has been updated _on Stripe's servers_, but also that their subscription has been updated on _our servers_. We do this "twice" because it allows us to store some knowledge of our customers current "state" locally. We could alternatively just call to Stripe every time we wanted this information, but that could get pretty costly. It also means Stripe needs to be working no matter what, or we risk breaking our application. This may seem like a lot of work, but it's all in service of a bigger point: a great customer experience. Even though we're just lowly developers, we can [kick those design nerds in the shins](http://youtu.be/VZ2CSpNze5Q?t=10s) with little gems like this.
+So let's pause for a second. What does all of this actually _achieve_? Two things: it ensures that our customer's subscription has been updated _on Stripe's servers_, but also that their subscription has been updated on _our servers_. We do this "twice" because it allows us to store some knowledge of our customers current "state" locally. We could alternatively just call to Stripe every time we wanted this information, but that could get pretty costly. It also means Stripe needs to be working no matter what, or we risk breaking our application. This may seem like a lot of work, but it's all in service of a bigger point: a great customer experience. Even though we're just lowly developers, we can [kick those design nerds in the shins](https://youtu.be/VZ2CSpNze5Q?t=10s) with little gems like this.
 
 Okay. Before we call this part complete, let's head back over to the client to see what we do when our response finally makes it _back to_ the client.
 
@@ -318,7 +318,7 @@ Not this again! Yep. Sorry. Because we can't be 100% certain that Stripe's respo
 
 We're also introducing an alert by using the `themeteorchef:bert` package we installed earlier. Depending on whether we get an error or our method is successful, we tell `Bert` which message style to use (errors are marked as `'danger'` to display alerts in red and successes are marked in green with `'success'`). Now, when something happens, good or bad, we can let the user know to help in their decision process. We're also doing something odd here. Why are we setting our `currentUserPlan_` Session variable to equal `null`?
 
-[Witchcraft](http://youtu.be/XfdiXBA7f6U?t=1m16s)! No. Not at all. But this is neat. Recall that we're making use of our `{{plan}}` UI helper to select our user's current plan. While handy for obscuring the user's plan data from the client, it actually catches us off guard a bit by _not_ being reactive. Think about it: we're calling to a method on the server which by itself isn't reactive. We do know, though, that our helper is dependent on our Session variable `currentUserPlan_` which _is_ reactive. By toggling this to `null` when our method call is successful, we're forcing our UI helper to update itself. This means that the UI will correctly update to reflect the user's new plan selection. Wacky.
+[Witchcraft](https://youtu.be/XfdiXBA7f6U?t=1m16s)! No. Not at all. But this is neat. Recall that we're making use of our `{{plan}}` UI helper to select our user's current plan. While handy for obscuring the user's plan data from the client, it actually catches us off guard a bit by _not_ being reactive. Think about it: we're calling to a method on the server which by itself isn't reactive. We do know, though, that our helper is dependent on our Session variable `currentUserPlan_` which _is_ reactive. By toggling this to `null` when our method call is successful, we're forcing our UI helper to update itself. This means that the UI will correctly update to reflect the user's new plan selection. Wacky.
 
 All right, that knocks out this feature. Our customers can know change their plan and be notified immediately of the change on screen. Awesome!
 
@@ -327,11 +327,11 @@ Next, we'll focus on updating a credit card. This one is interesting.
 ### Adding and Updating Credit Cards
 Since we last saw it in part one, our credit card template has grown up a bit. Because our goal is to reuse our template in a handful of different situations, we needed to beef it up a bit to be context-aware. This means that our template knows _where_ it is being invoked and can manage its own state accordingly. How does that work?
 
-Introduced in Meteor 0.8.2, [dynamic templates](http://docs.meteor.com/#/full/template_dynamic) allow us to:
+Introduced in Meteor 0.8.2, [dynamic templates](https://docs.meteor.com/#/full/template_dynamic) allow us to:
 
 > [...] include a template by name, where the name may be calculated by a helper and may change reactively. <br>
 
-&mdash; via [Meteor Template.dynamic Documentation](http://docs.meteor.com/#/full/template_dynamic)
+&mdash; via [Meteor Template.dynamic Documentation](https://docs.meteor.com/#/full/template_dynamic)
 
 In our case, we're not using these _quite_ this way. Instead, we're making use of the dynamic template's `data` context. So this makes sense, let's look at how we've included our credit card template into our `billingCard` template:
 
@@ -598,7 +598,7 @@ If you want to save yourself an extra API call, it's worth exploring storing the
 Okay, so, we've got some important functionality wired up to help our customer better control the state of their account. But we've left something out...actually _displaying_ the account state. Next, we'll learn how to manage the customer's subscription status and help them to understand the current state of their account.
 
 #### Displaying Status
-The first thing we need to do is to actually display the customer's account status. [Duh](http://media.giphy.com/media/Lndtxw3ztLhNC/giphy.gif). Let's take a look at a little addition we've made to the `billingOverview` template to get this done.
+The first thing we need to do is to actually display the customer's account status. [Duh](https://media.giphy.com/media/Lndtxw3ztLhNC/giphy.gif). Let's take a look at a little addition we've made to the `billingOverview` template to get this done.
 
 <p class="block-header">/client/views/authenticated/billing/billing-overview.html</p>
 
@@ -629,7 +629,7 @@ The first thing we need to do is to actually display the customer's account stat
 </template>
 ```
 
-Oh yeah, code reusability! Look at our `{{plan}}` UI helper [shine](http://media.giphy.com/media/2UpzC3iPenf44/giphy.gif). Can you see what's happening here? It's actually quite beautiful. Using a combination of our `{{equals}}` helper along with an `{{#if}}` block, we're simply checking to see whether the value of the current customer's subscription status is equal to the string we've specified: `trialing`, `active`, or `canceled`.
+Oh yeah, code reusability! Look at our `{{plan}}` UI helper [shine](https://media.giphy.com/media/2UpzC3iPenf44/giphy.gif). Can you see what's happening here? It's actually quite beautiful. Using a combination of our `{{equals}}` helper along with an `{{#if}}` block, we're simply checking to see whether the value of the current customer's subscription status is equal to the string we've specified: `trialing`, `active`, or `canceled`.
 
 Depending on the state, we prepend our list of plan data in `billingOverview` with a colored bar to match the state (green for `active`, yellow for `trialing`, and red for `canceled`). We also include an option to _cancel_ their subscription or resubscribe depending on the current state. Woah!
 
@@ -729,9 +729,9 @@ Our function, then, is designed to check our current customer's subscription sta
 
 In human speak, this means that although the customer's account has been marked as canceled, their subscription won't technically _end_ until the end of the current billing period (e.g. if I have a 30 day subscription and cancel on day 15, I still have 15 days left). Because we want our customers get the value they've paid for out of our app, we need to account for this fact. By checking the date in combination with the status, we can determine whether or not we've hit the _period end_ for their subscription, or if they're in the "canceled but not ended" window.
 
-To run our hook, we simply call to Iron Router's `onBeforeAction` method, passing our `checkSubscription` function. We also pass an array of pages that we _don't_ want to run the hook (i.e. don't block the customer from viewing pages that will help them to get out of this block). Now, whenever Iron Router runs a route, it will hit this `onBeforeAction` and if we find the customer isn't subscribed, block them from the page they were trying to access. It's so [_evil_](http://youtu.be/3ld3imEfpZU?t=8s).
+To run our hook, we simply call to Iron Router's `onBeforeAction` method, passing our `checkSubscription` function. We also pass an array of pages that we _don't_ want to run the hook (i.e. don't block the customer from viewing pages that will help them to get out of this block). Now, whenever Iron Router runs a route, it will hit this `onBeforeAction` and if we find the customer isn't subscribed, block them from the page they were trying to access. It's so [_evil_](https://youtu.be/3ld3imEfpZU?t=8s).
 
-Make sense? Killer! Let's take a look at [roping our customer's back in](http://media.giphy.com/media/8fE7VzqdcXvOw/giphy.gif) after they've canceled their account.
+Make sense? Killer! Let's take a look at [roping our customer's back in](https://media.giphy.com/media/8fE7VzqdcXvOw/giphy.gif) after they've canceled their account.
 
 #### Resubscribing to a Subscription
 If you've signed up for any SaaS before, it's likely that you've used it heavily at one point, but then didn't need it so much later. You weren't saying bye for good, but you wanted to cancel your subscription for a little bit until you needed it again.
@@ -820,7 +820,7 @@ Template.billingResubscribe.events({
 
 This should all be familiar by now. In our `submit form` event handler, we start by checking whether or not the user is resubscribing with a _new_ credit card (e.g. they unsubscribed for a year and during that time, were issued a new card). If they _are_ adding a new card, we grab the appropriate data from our template and call up our `stripeSwapCard` method from earlier (first passing our user's card data over to our `STRIPE.getToken()` method).
 
-If they're _not_ adding a new card, we just call to our `stripeUpdateSubscription` method from earlier. The only big thing to note, here, is that we've wrapped our call to `stripeUpdateSubscription` in another function called `updateSubscription`. Why? Because irrespective of _which_ path the customer chooses here, we will eventually need to update their subscription per their choices. Placing this in a function helps us to prevent repeating a bunch of code! [Nerdgasm](http://youtu.be/2FW43MV_6d0?t=1h13m53s)!
+If they're _not_ adding a new card, we just call to our `stripeUpdateSubscription` method from earlier. The only big thing to note, here, is that we've wrapped our call to `stripeUpdateSubscription` in another function called `updateSubscription`. Why? Because irrespective of _which_ path the customer chooses here, we will eventually need to update their subscription per their choices. Placing this in a function helps us to prevent repeating a bunch of code! [Nerdgasm](https://youtu.be/2FW43MV_6d0?t=1h13m53s)!
 
 Again, since we're reusing code from earlier, we're going to go ahead and skip our usual time warp up to the server. One step left: webhooks!
 
@@ -834,7 +834,7 @@ Feeling the burn? Good. We've got one little (and really cool) thing to do befor
 
 > Webhooks are "user-defined HTTP callbacks". They are usually triggered by some event, such as pushing code to a repository or a comment being posted to a blog. When that event occurs, the source site makes an HTTP request to the URI configured for the webhook.
 
-&mdash; via [Webhook on Wikipedia](http://en.wikipedia.org/wiki/Webhook)
+&mdash; via [Webhook on Wikipedia](https://en.wikipedia.org/wiki/Webhook)
 
 Okay, yeah, whatever you say. But what _is_ a webhook? For our needs, a webhook is a message that Stripe will send us whenever anything happens on Stripe. So, for example, if a customer resubscribes to our applciation, that would _trigger_ a handful of "events" that Stripe would then send to a URL we specify. That URL (which is defined in our app as a server-side route) will then take what Stripe sends us and _do something_ with it. Before we jump into this, though, let's hop over to Stripe to see how to configure webhooks.
 
@@ -868,11 +868,11 @@ Really simple, but really powerful. Just like on the client, we call `Router.rou
 
 Next, we pass a callback function with a few goodies. First, we take full advantage of our access to Node's `request` and `response` objects. Because we've done a bit of legwork and know that the bulk of the data we'll access will be in the `body` object of the data Stripe sends us, we just drill down to it by default and assign it to a variable `request`.
 
-At the bottom of our function, we call to `this.response.statusCode` setting it to `200` ([HTTP success code](http://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success)) and return a little message to Stripe via `this.response.end()`. What's the point of this? Imagine two robots sitting across from one another. One says "bleep blorp" and the other says nothing. What a jerk, Robot #2. By sending a `statusCode` back to Stripe (notice: _our server_ is responding to _Stripe's server_) along with a message, we're letting Stripe know that we heard it ok. This way the webhook succeeds and Stripe goes on its merry way. _Bleep blorp_, indeed.
+At the bottom of our function, we call to `this.response.statusCode` setting it to `200` ([HTTP success code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#2xx_Success)) and return a little message to Stripe via `this.response.end()`. What's the point of this? Imagine two robots sitting across from one another. One says "bleep blorp" and the other says nothing. What a jerk, Robot #2. By sending a `statusCode` back to Stripe (notice: _our server_ is responding to _Stripe's server_) along with a message, we're letting Stripe know that we heard it ok. This way the webhook succeeds and Stripe goes on its merry way. _Bleep blorp_, indeed.
 
 How about this `switch(request.type)`, though? That's the juicy part. This is where we actually _do something_ with the data Stripe is sending us. We use a `switch` function here because Stripe sends [a _crap load_ of webhooks](https://stripe.com/docs/api#event_types) by default (notice that in the screenshot above you can specify _which_ webhooks you want sent to you). What this is doing is looking at the value of `request.type` (equivalent to `this.request.body.type`) and then deciding which function to fire. What's with this pattern?
 
-Each webhook that we respond to from Stripe is responsible for some sort of action in our application. For our demo and as an example, we're going to update our customer's subscription information in our database whenever we receive the `customer.subscription.updated` event from Stripe. Simplifying this down to a switch that calls a remote function (i.e. in another file) keeps this part of our code neat and tidy. Don't worry, we've got our messiness [waiting for us elsewhere](http://youtu.be/WKGRE7DlB8I?t=37s)!
+Each webhook that we respond to from Stripe is responsible for some sort of action in our application. For our demo and as an example, we're going to update our customer's subscription information in our database whenever we receive the `customer.subscription.updated` event from Stripe. Simplifying this down to a switch that calls a remote function (i.e. in another file) keeps this part of our code neat and tidy. Don't worry, we've got our messiness [waiting for us elsewhere](https://youtu.be/WKGRE7DlB8I?t=37s)!
 
 <div class="note">
   <h3>A quick note</h3>
@@ -972,6 +972,6 @@ Don't freak out, but you've just learned how to integrate Stripe from start to f
 
 This was a lot of work. No, really. Your eyes are probably bloodshot. Go get some sleep, and dream about that sweet, sweet recurring revenue you're about to earn.
 
-![Baby duck falling asleep](http://media.giphy.com/media/wsEX8uMrTRDoI/giphy.gif)
+![Baby duck falling asleep](https://media.giphy.com/media/wsEX8uMrTRDoI/giphy.gif)
 
 Until next time!
