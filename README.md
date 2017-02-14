@@ -1,16 +1,15 @@
-#### The Meteor Chef
-#### \#005 - Building a SaaS with Meteor: Stripe
+#### Tutorial: Building a SaaS with Meteor: Stripe (Part 1)
 
-In this recipe (two parts) we'll help a new SaaS startup Todoodle (a todo list creator) integrate Stripe into their app. We'll learn about signing up users, creating customers and subscriptions in stripe, managing a customer's usage,  and displaying a customer's  current plan information.
+undefined
 
-In part two of our Stripe recipe we'll learn how to make it possible for our customers to change their plan, update and add new credit cards, cancel a subscription, and resubscribe to a subscription. We'll also learn about using Stripe's webhooks to display invoices for our customers and control account status.
+[Read this tutorial on The Meteor Chef](https://themeteorchef.com/tutorials/building-a-saas-with-meteor-stripe-part-1)  
 
-[Read Part 1 on The Meteor Chef](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-1)  
+[Download the source (.zip)](https://github.com/themeteorchef/saas-stripe/archive/master.zip)
 
-[Read Part 2 on The Meteor Chef](http://themeteorchef.com/recipes/building-a-saas-with-meteor-stripe-part-2)  
+---
 
-[Demo the Recipe](http://tmc-005-demo.meteor.com)  
+**Need help with this?** [Sign up for a Mentorship appointment](https://themeteorchef.com/mentorship?readme=building-a-saas-with-meteor-stripe-part-1) and get 1-on-1 help.
 
-[Download the Source](https://github.com/themeteorchef/saas-stripe/archive/master.zip)
+---
 
-The code for this recipe is licensed under the [MIT License](http://opensource.org/licenses/MIT).
+_The code for this tutorial is licensed under the [MIT License](http://opensource.org/licenses/MIT)_.
