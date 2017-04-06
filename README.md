@@ -1,14 +1,14 @@
-#### Tutorial: Building a SaaS with Meteor: Stripe (Part 2)
+#### Tutorial: Building a SaaS with Meteor: Stripe (Part 1)
 
 undefined
 
-[Read this tutorial on The Meteor Chef](https://themeteorchef.com/tutorials/building-a-saas-with-meteor-stripe-part-2)  
+[Read this tutorial on The Meteor Chef](https://themeteorchef.com/tutorials/building-a-saas-with-meteor-stripe-part-1)  
 
 [Download the source (.zip)](https://github.com/themeteorchef/saas-stripe/archive/master.zip)
 
 ---
 
-**Need help with this?** [Sign up for a Mentorship appointment](https://themeteorchef.com/mentorship?readme=building-a-saas-with-meteor-stripe-part-2) and get 1-on-1 help.
+**Need help with this?** [Sign up for a Mentorship appointment](https://themeteorchef.com/mentorship?readme=building-a-saas-with-meteor-stripe-part-1) and get 1-on-1 help.
 
 ---
 
